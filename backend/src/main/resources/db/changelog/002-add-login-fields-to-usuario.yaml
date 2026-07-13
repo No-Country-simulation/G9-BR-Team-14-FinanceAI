@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-login-fields-to-usuario
+      author: rodrigo
+      changes:
+        - addColumn:
+            tableName: usuario
+            columns:
+              - column:
+                  name: username
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: senha_hash
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email_verificado
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: ultimo_login_em
+                  type: timestamp
+              - column:
+                  name: criado_em
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: atualizado_em
+                  type: timestamp
+
+      rollback:
+        - dropColumn:
+            tableName: usuario
+            columns:
+              - column:
+                  name: username
+              - column:
+                  name: senha_hash
+              - column:
+                  name: email_verificado
+              - column:
+                  name: ultimo_login_em
+              - column:
+                  name: criado_em
+              - column:
+                  name: atualizado_em

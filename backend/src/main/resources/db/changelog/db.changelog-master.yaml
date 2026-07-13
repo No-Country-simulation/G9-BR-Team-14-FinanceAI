@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 001-create-user-auth-tables.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 002-add-login-fields-to-usuario.yaml
+      relativeToChangelogFile: true
