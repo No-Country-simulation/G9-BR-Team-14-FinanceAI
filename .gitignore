@@ -58,3 +58,4 @@ docker-compose.local.yml
 **/__pycache__/
 .venv
 .env
+*.joblib
