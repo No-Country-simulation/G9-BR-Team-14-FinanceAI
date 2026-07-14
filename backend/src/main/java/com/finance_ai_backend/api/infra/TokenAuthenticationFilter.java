@@ -2,7 +2,6 @@ package com.finance_ai_backend.api.infra;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,9 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.finance_ai_backend.api.domain.exceptions.TokenInvalidoException;
-import com.finance_ai_backend.api.services.JwtService;
+import com.finance_ai_backend.api.domain.models.Usuario;
+import com.finance_ai_backend.api.services.TokenService;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,14 +20,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String PREFIXO_BEARER = "Bearer ";
 
-    private final JwtService jwtService;
+    private final TokenService tokenService;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public TokenAuthenticationFilter(TokenService tokenService) {
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -49,16 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void autenticarSePossivel(String token) {
         try {
-            Claims claims = jwtService.validarEExtrairClaims(token);
-            if (!JwtService.TIPO_ACESSO.equals(claims.get("tipo", String.class))) {
-                return;
-            }
-
-            UUID usuarioId = UUID.fromString(claims.getSubject());
-            UsernamePasswordAuthenticationToken autenticacao = new UsernamePasswordAuthenticationToken(usuarioId, null, List.of());
+            Usuario usuario = tokenService.validarToken(token);
+            UsernamePasswordAuthenticationToken autenticacao = new UsernamePasswordAuthenticationToken(usuario, null, List.of());
             SecurityContextHolder.getContext().setAuthentication(autenticacao);
-        } catch (TokenInvalidoException | IllegalArgumentException e) {
-            // token ausente/expirado/assinatura inválida/subject malformado: segue sem autenticar
+        } catch (TokenInvalidoException e) {
+            // token ausente/expirado/revogado/formato inválido: segue sem autenticar
         }
     }
 }

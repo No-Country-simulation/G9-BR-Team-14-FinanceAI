@@ -1,63 +1,52 @@
 package com.finance_ai_backend.api.services;
 
-import java.time.Instant;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.finance_ai_backend.api.domain.dtos.TokenBlacklistDTO;
 import com.finance_ai_backend.api.domain.dtos.TokenGeracaoDTO;
-import com.finance_ai_backend.api.domain.dtos.TokenRefreshDTO;
 import com.finance_ai_backend.api.domain.dtos.TokenRespostaDTO;
-import com.finance_ai_backend.api.domain.enums.MotivoRevogacao;
 import com.finance_ai_backend.api.domain.exceptions.CredenciaisInvalidasException;
 import com.finance_ai_backend.api.domain.exceptions.TokenInvalidoException;
 import com.finance_ai_backend.api.domain.models.TokenAcesso;
-import com.finance_ai_backend.api.domain.models.TokenRefresh;
-import com.finance_ai_backend.api.domain.models.TokenRevogado;
 import com.finance_ai_backend.api.domain.models.Usuario;
 import com.finance_ai_backend.api.domain.repositories.TokenAcessoRepositorio;
-import com.finance_ai_backend.api.domain.repositories.TokenRefreshRepositorio;
-import com.finance_ai_backend.api.domain.repositories.TokenRevogadoRepositorio;
 import com.finance_ai_backend.api.domain.repositories.UsuarioRepositorio;
 import com.finance_ai_backend.api.mappers.TokenMapper;
-
-import io.jsonwebtoken.Claims;
 
 @Service
 public class TokenService {
 
     private static final String MENSAGEM_CREDENCIAIS_INVALIDAS = "Login ou senha inválidos";
-    private static final String MENSAGEM_TOKEN_INVALIDO = "Refresh token inválido, expirado ou já revogado";
+    private static final String MENSAGEM_TOKEN_INVALIDO = "Token inválido, expirado ou revogado";
 
     private final UsuarioRepositorio usuarioRepositorio;
     private final TokenAcessoRepositorio tokenAcessoRepositorio;
-    private final TokenRefreshRepositorio tokenRefreshRepositorio;
-    private final TokenRevogadoRepositorio tokenRevogadoRepositorio;
     private final Argon2PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final Duration duracaoToken;
 
     public TokenService(
             UsuarioRepositorio usuarioRepositorio,
             TokenAcessoRepositorio tokenAcessoRepositorio,
-            TokenRefreshRepositorio tokenRefreshRepositorio,
-            TokenRevogadoRepositorio tokenRevogadoRepositorio,
             Argon2PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            @Value("${auth.token.duracao-horas}") long duracaoHoras) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.tokenAcessoRepositorio = tokenAcessoRepositorio;
-        this.tokenRefreshRepositorio = tokenRefreshRepositorio;
-        this.tokenRevogadoRepositorio = tokenRevogadoRepositorio;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+        this.duracaoToken = Duration.ofHours(duracaoHoras);
     }
 
     @Transactional
-    public TokenRespostaDTO gerarTokens(TokenGeracaoDTO dto) {
+    public TokenRespostaDTO gerarToken(TokenGeracaoDTO dto) {
         Usuario usuario = usuarioRepositorio.findByUsernameOrEmail(dto.getLogin(), dto.getLogin())
-                .orElseThrow(() -> new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS));
+               .orElseThrow(() -> {
+                    return new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
+                });
 
         if (!Boolean.TRUE.equals(usuario.getAtivo())) {
             throw new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
@@ -67,94 +56,56 @@ public class TokenService {
             throw new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
         }
 
-        TokenRespostaDTO resposta = emitirParDeTokens(usuario);
-        usuario.setUltimoLoginEm(Instant.now().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
-        usuarioRepositorio.save(usuario);
-        return resposta;
-    }
-
-    @Transactional
-    public TokenRespostaDTO refreshTokens(TokenRefreshDTO dto) {
-        Claims claims = jwtService.validarEExtrairClaims(dto.getRefreshToken());
-        if (!JwtService.TIPO_REFRESH.equals(claims.get("tipo", String.class))) {
-            throw new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO);
-        }
-
-        String hash = jwtService.sha256Hash(dto.getRefreshToken());
-        TokenRefresh tokenRefresh = tokenRefreshRepositorio.findByTokenHash(hash)
-                .filter(t -> Boolean.TRUE.equals(t.getValido()))
-                .orElseThrow(() -> new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO));
-
-        tokenRefresh.setValido(false);
-        tokenRefreshRepositorio.save(tokenRefresh);
-
-        registrarRevogacao(tokenRefresh.getUsuario(), hash, MotivoRevogacao.REFRESH);
-
-        Usuario usuario = tokenRefresh.getUsuario();
-        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-            throw new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
-        }
-
-        return emitirParDeTokens(usuario);
-    }
-
-    @Transactional
-    public void blacklistToken(TokenBlacklistDTO dto) {
-        Claims claims = jwtService.validarEExtrairClaims(dto.getRefreshToken());
-        String hash = jwtService.sha256Hash(dto.getRefreshToken());
-
-        if (tokenRevogadoRepositorio.existsByTokenHash(hash)) {
-            return;
-        }
-
-        Usuario usuario = tokenRefreshRepositorio.findByTokenHash(hash)
-                .map(tokenRefresh -> {
-                    tokenRefresh.setValido(false);
-                    tokenRefreshRepositorio.save(tokenRefresh);
-                    return tokenRefresh.getUsuario();
-                })
-                .orElseGet(() -> usuarioRepositorio.findById(UUID.fromString(claims.getSubject()))
-                        .orElseThrow(() -> new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO)));
-
-        registrarRevogacao(usuario, hash, MotivoRevogacao.LOGOUT);
-    }
-
-    private TokenRespostaDTO emitirParDeTokens(Usuario usuario) {
-        Instant emitidoEm = Instant.now();
-        Instant expiraAcesso = emitidoEm.plus(jwtService.duracaoAcesso());
-        Instant expiraRefresh = emitidoEm.plus(jwtService.duracaoRefresh());
-
-        String accessTokenJwt = jwtService.gerarToken(usuario.getPk(), JwtService.TIPO_ACESSO, emitidoEm, expiraAcesso);
-        String refreshTokenJwt = jwtService.gerarToken(usuario.getPk(), JwtService.TIPO_REFRESH, emitidoEm, expiraRefresh);
+        LocalDateTime emitidoEm = LocalDateTime.now();
+        UUID token = UUID.randomUUID();
 
         tokenAcessoRepositorio.save(
             TokenAcesso.builder()
+                .id(token)
                 .usuario(usuario)
-                .tokenHash(jwtService.sha256Hash(accessTokenJwt))
-                .emitidoEm(jwtService.paraLocalDateTime(emitidoEm))
-                .expiraEm(jwtService.paraLocalDateTime(expiraAcesso))
+                .emitidoEm(emitidoEm)
+                .expiraEm(emitidoEm.plus(duracaoToken))
                 .valido(true)
                 .build()
-            );
+        );
 
-        tokenRefreshRepositorio.save(TokenRefresh.builder()
-                .usuario(usuario)
-                .tokenHash(jwtService.sha256Hash(refreshTokenJwt))
-                .emitidoEm(jwtService.paraLocalDateTime(emitidoEm))
-                .expiraEm(jwtService.paraLocalDateTime(expiraRefresh))
-                .valido(true)
-                .build()
-            );
+        usuario.setUltimoLoginEm(emitidoEm);
+        usuarioRepositorio.save(usuario);
 
-        return TokenMapper.paraTokenRespostaDTO(accessTokenJwt, refreshTokenJwt);
+        return TokenMapper.paraTokenRespostaDTO(token.toString());
     }
 
-    private void registrarRevogacao(Usuario usuario, String tokenHash, MotivoRevogacao motivo) {
-        tokenRevogadoRepositorio.save(TokenRevogado.builder()
-                .usuario(usuario)
-                .tokenHash(tokenHash)
-                .revogadoEm(java.time.LocalDateTime.now())
-                .motivo(motivo)
-                .build());
+    @Transactional
+    public Usuario validarToken(String token) {
+        UUID tokenId = parseToken(token);
+
+        TokenAcesso tokenAcesso = tokenAcessoRepositorio.findById(tokenId)
+                .orElseThrow(() -> new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO));
+
+        if (!Boolean.TRUE.equals(tokenAcesso.getValido())
+                || tokenAcesso.getExpiraEm() == null
+                || tokenAcesso.getExpiraEm().isBefore(LocalDateTime.now())) {
+            throw new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO);
+        }
+
+        return tokenAcesso.getUsuario();
+    }
+
+    @Transactional
+    public void revogarToken(String token) {
+        UUID tokenId = parseToken(token);
+
+        tokenAcessoRepositorio.findById(tokenId).ifPresent(tokenAcesso -> {
+            tokenAcesso.setValido(false);
+            tokenAcessoRepositorio.save(tokenAcesso);
+        });
+    }
+
+    private UUID parseToken(String token) {
+        try {
+            return UUID.fromString(token);
+        } catch (IllegalArgumentException e) {
+            throw new TokenInvalidoException(MENSAGEM_TOKEN_INVALIDO);
+        }
     }
 }

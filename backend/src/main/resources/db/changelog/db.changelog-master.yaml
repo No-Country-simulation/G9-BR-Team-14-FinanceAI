@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: 002-add-login-fields-to-usuario.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-simplificar-tokens-acesso.yaml
+      relativeToChangelogFile: true
