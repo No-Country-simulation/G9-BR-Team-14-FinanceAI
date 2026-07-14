@@ -7,13 +7,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,17 +26,17 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TokenAcesso {
 
+    /**
+     * O próprio valor do token (UUID simples) é usado como identificador,
+     * gerado pela aplicação em {@code TokenService} — não é auto-gerado pelo JPA.
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "fk_usuario", nullable = false, foreignKey = @ForeignKey(name = "fk_usuario_token_ref"))
     private Usuario usuario;
-
-    @Column(name = "token_hash", nullable = false, unique = true)
-    private String tokenHash;
 
     @Column(name = "emitido_em")
     private LocalDateTime emitidoEm;
