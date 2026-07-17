@@ -21,6 +21,15 @@ A Finance AI API centraliza as regras de negócio e exposição de endpoints HTT
 - **Migrações automatizadas com Liquibase;
 - **Documentação OpenAPI/Swagger.
 
+## Principais funcionalidades
+- **API REST com validação robusta de entrada.
+- **Controle de acesso com Spring Security.
+- **Hash de senha com Argon2.
+- **Tokens JWT com política de validação e revogação.
+- **Versionamento de schema com Liquibase.
+- **Testes de integração com banco real via Testcontainers.
+- **Documentação interativa via Swagger UI.
+
 ## Stack tecnológica
 - **Java 25**
 - **Spring Boot 4.1.0** (`web`, `data-jpa`, `security`, `validation`, `actuator`)
