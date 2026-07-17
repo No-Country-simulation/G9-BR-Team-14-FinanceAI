@@ -12,6 +12,15 @@ Backend REST do projeto Finance AI, desenvolvido com Java + Spring Boot, com foc
 - [Usuário de teste](#Usuário-de-testes)
 - [Documentação da API (Swagger)](#documentação-da-api-swagger)
 
+## Visão geral
+A Finance AI API centraliza as regras de negócio e exposição de endpoints HTTP para o ecossistema da aplicação, incluindo:
+
+- **Autenticação/autorização com JWT;
+- **Ggestão de usuários, grupos e permissões;
+- **Persistência em PostgreSQL;
+- **Migrações automatizadas com Liquibase;
+- **Documentação OpenAPI/Swagger.
+
 ## Stack tecnológica
 - **Java 25**
 - **Spring Boot 4.1.0** (`web`, `data-jpa`, `security`, `validation`, `actuator`)
