@@ -15,14 +15,13 @@ API REST em Java/Spring Boot que fornece o backend do projeto **Finance AI**.
 ## Stack tecnológica
 - **Java 25**
 - **Spring Boot 4.1.0** (`web`, `data-jpa`, `security`, `validation`, `actuator`)
-- **PostgreSQL** como banco de dados
-- **Liquibase** para versionamento/migração do schema (changelogs em `src/main/resources/db/changelog`)
+- **H2** como banco de dados em memória (schema gerado automaticamente pelo Hibernate/JPA)
 - **JJWT** (`io.jsonwebtoken`) para geração/validação de tokens JWT
 - **Argon2** (`argon2-jvm`) para hash de senhas
 - **springdoc-openapi** para documentação Swagger/OpenAPI
 - **Lombok** para reduzir boilerplate (getters/setters/builders)
 - **spring-dotenv** para carregar variáveis de um arquivo `.env` na raiz automaticamente
-- **JUnit + Testcontainers** para testes de integração com Postgres real em container
+- **JUnit** para testes de integração usando o próprio H2 em memória
 - **Maven** (via wrapper `./mvnw`) como build tool
 
 ## Arquitetura e organização do código
@@ -54,31 +53,30 @@ Fluxo típico de uma requisição autenticada:
 
 ## Pré-requisitos
 - JDK 25
-- Docker e Docker Compose (para subir Postgres/pgAdmin, e para os testes com Testcontainers)
 - Maven não é obrigatório: use o wrapper `./mvnw` incluso no repositório
 
 ## Configuração (variáveis de ambiente)
 O projeto usa [`spring-dotenv`](https://github.com/paulschwarz/spring-dotenv), então basta criar um arquivo `.env` na raiz (veja `.env_exemple` como base).
 
 ## Como rodar o projeto
-1. Suba o banco de dados (Postgres + pgAdmin) com Docker Compose:
-   ```bash
-   docker compose up -d
-   ```
-2. Rode a aplicação com o wrapper Maven:
+1. Rode a aplicação com o wrapper Maven:
    ```bash
    ./mvnw spring-boot:run
    ```
-3. Acessos úteis:
+2. Acessos úteis:
    - API: http://localhost:8080
    - Swagger UI: http://localhost:8080/docs.html
    - Health check (Actuator): http://localhost:8080/actuator/health
-   - pgAdmin: http://localhost:5050
+   - Console web do H2: http://localhost:8080/h2-console
+     - JDBC URL: `jdbc:h2:mem:financeai`
+     - Usuário: `sa` / Senha: (em branco)
 
-As migrações do Liquibase são aplicadas automaticamente na inicialização da aplicação.
+O schema do banco é criado/atualizado automaticamente pelo Hibernate/JPA
+(`spring.jpa.hibernate.ddl-auto=create-drop`) a partir das entidades, sem
+necessidade de migrações manuais.
 
 ## Testes
-Os testes de integração usam Testcontainers, que sobe um container Postgres automaticamente (Docker precisa estar disponível):
+Os testes de integração usam o próprio H2 em memória, sem dependências externas:
 ```bash
 ./mvnw test
 ```

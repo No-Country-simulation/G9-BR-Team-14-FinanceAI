@@ -34,7 +34,8 @@ public class TokenService {
             UsuarioRepositorio usuarioRepositorio,
             TokenAcessoRepositorio tokenAcessoRepositorio,
             Argon2PasswordEncoder passwordEncoder,
-            @Value("${auth.token.duracao-horas}") long duracaoHoras) {
+            @Value("${auth.token.duracao-horas}") long duracaoHoras
+        ) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.tokenAcessoRepositorio = tokenAcessoRepositorio;
         this.passwordEncoder = passwordEncoder;
