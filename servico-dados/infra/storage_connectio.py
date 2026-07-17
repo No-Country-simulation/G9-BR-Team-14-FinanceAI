@@ -1,5 +1,6 @@
-import os
+import io
 import boto3
+import joblib
 from botocore.config import Config
 
 from infra.config import (
@@ -29,10 +30,10 @@ class StorageConnection:
             ),
         )
 
-    def obtem_item(self, nome_objeto):
-        pasta_modelos='ia_modelos'
+    def obtem_item_de_modelo(self, nome_objeto):
         chave_completa = f"{OCI_PREFIX}/{nome_objeto}"
 
-        destino = os.path.join(pasta_modelos, nome_objeto)
-        os.makedirs(os.path.dirname(destino), exist_ok=True)
-        self.cliente.download_file(OCI_BUCKET_NAME, chave_completa, destino)
+        objeto = self.cliente.get_object(Bucket=OCI_BUCKET_NAME, Key=chave_completa)
+        buffer = io.BytesIO(objeto["Body"].read())
+
+        return joblib.load(buffer)

@@ -34,4 +34,3 @@ class PerfilOutput(BaseModel):
 
 class SugestoesOutput(BaseModel):
     sugestoes_ativas: list[str]
-    vetor_bruto: list[int]
