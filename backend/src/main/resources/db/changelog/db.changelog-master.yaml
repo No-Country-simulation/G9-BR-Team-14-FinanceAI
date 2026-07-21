@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: 003-simplificar-tokens-acesso.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 004-create-finance-tables.yaml
+      relativeToChangelogFile: true
