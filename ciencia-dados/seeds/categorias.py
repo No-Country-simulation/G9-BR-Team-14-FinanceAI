@@ -1,6 +1,6 @@
 categorias_seed = [
   {
-    "categoria": "Alimentação",
+    "categoria": "ALIMENTACAO",
     "descricoes": [
       "Supermercado", "supermerc", "iFood", "Restaurante", "Padaria",
       "Lanche na padaria", "Feira livre", "Marmita", "Almoço no self-service",
@@ -23,7 +23,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Transporte",
+    "categoria": "TRANSPORTE",
     "descricoes": [
       "Uber", "99 ida trab", "Gasolina", "Posto Ipiranga", "Ônibus",
       "Estacionamento shopping", "Pedágio", "Metrô", "Bilhete único",
@@ -48,7 +48,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Saúde",
+    "categoria": "SAUDE",
     "descricoes": [
       "Farmácia", "Droga Raia", "Consulta médica", "Plano de saúde",
       "Academia", "acad", "Exame de sangue", "Fisioterapia",
@@ -73,7 +73,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Moradia",
+    "categoria": "MORADIA",
     "descricoes": [
       "Aluguel", "Condomínio", "Conta de luz", "Conta de água", "Conta de gás",
       "Internet residencial", "Mobília", "Reforma", "Material de construção",
@@ -98,7 +98,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Educação",
+    "categoria": "EDUCACAO",
     "descricoes": [
       "Mensalidade faculdade", "Curso online", "Escola dos filhos",
       "Material didático", "Curso de inglês", "Livro técnico",
@@ -125,7 +125,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Lazer",
+    "categoria": "LAZER",
     "descricoes": [
       "Cinema", "Jogo digital", "Livro", "Show", "Viagem", "Passeio no parque",
       "Bar com amigos", "Parque de diversões", "Ingresso de evento",
@@ -150,7 +150,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Serviços",
+    "categoria": "SERVICOS",
     "descricoes": [
       "Diarista", "Encanador", "Cabeleireiro", "Manicure", "Eletricista",
       "Lavanderia", "Costureira", "Chaveiro", "Pedreiro", "Jardineiro",
@@ -176,7 +176,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Assinaturas",
+    "categoria": "ASSINATURAS",
     "descricoes": [
       "Netflix", "Spotify", "iCloud", "Amazon Prime", "Disney+",
       "YouTube Premium", "HBO Max", "Software de edição", "Adobe Creative Cloud",
@@ -202,7 +202,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Dívidas",
+    "categoria": "DIVIDAS",
     "descricoes": [
       "Financiamento do carro", "Financiamento da casa", "Fatura antiga do cartão",
       "Juros de empréstimo", "Taxa de cancelamento", "Parcela de empréstimo pessoal",
@@ -232,7 +232,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Investimentos",
+    "categoria": "INVESTIMENTO",
     "descricoes": [
       "Aporte Tesouro Direto", "Compra de ações", "Aplicação CDB", "Aporte fundo imobiliário",
       "Compra de criptomoeda", "Aporte previdência privada", "Aplicação poupança",
@@ -261,7 +261,7 @@ categorias_seed = [
     ]
   },
   {
-    "categoria": "Outras",
+    "categoria": "OUTRAS",
     "descricoes": [
       "Saque em caixa eletrônico", "Transferência Pix", "Presente de aniversário",
       "Doação", "Compra diversa", "Multa", "Taxa bancária", "Tarifa de manutenção de conta",

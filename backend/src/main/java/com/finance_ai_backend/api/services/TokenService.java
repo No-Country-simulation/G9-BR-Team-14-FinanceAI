@@ -44,14 +44,10 @@ public class TokenService {
 
     @Transactional
     public TokenRespostaDTO gerarToken(TokenGeracaoDTO dto) {
-        Usuario usuario = usuarioRepositorio.findByUsernameOrEmail(dto.getLogin(), dto.getLogin())
+        Usuario usuario = usuarioRepositorio.findByUsername(dto.getLogin())
                .orElseThrow(() -> {
                     return new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
                 });
-
-        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-            throw new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
-        }
 
         if (!passwordEncoder.matches(dto.getSenha(), usuario.getSenhaHash())) {
             throw new CredenciaisInvalidasException(MENSAGEM_CREDENCIAIS_INVALIDAS);
@@ -69,9 +65,6 @@ public class TokenService {
                 .valido(true)
                 .build()
         );
-
-        usuario.setUltimoLoginEm(emitidoEm);
-        usuarioRepositorio.save(usuario);
 
         return TokenMapper.paraTokenRespostaDTO(token.toString());
     }

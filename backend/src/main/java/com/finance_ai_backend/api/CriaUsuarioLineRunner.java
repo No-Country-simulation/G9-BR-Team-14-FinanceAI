@@ -32,7 +32,6 @@ public class CriaUsuarioLineRunner implements CommandLineRunner {
             usuarioService.cadastraUsuario(
                 UsuarioMinimoParaCadastroDTO
                 .builder()
-                .email("admin@admin.com")
                 .username(adminUsername)
                 .senha(adminPassword)
                 .build()
