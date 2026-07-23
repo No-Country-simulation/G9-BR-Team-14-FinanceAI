@@ -14,9 +14,11 @@ import org.springframework.web.client.RestClient;
 import com.finance_ai_backend.api.domain.dtos.AnaliseFinanceiraDTO;
 import com.finance_ai_backend.api.domain.dtos.AnalisePerfilRetornoDTO;
 import com.finance_ai_backend.api.domain.dtos.CategoriaTotalDTO;
+import com.finance_ai_backend.api.domain.dtos.PerfilUsuarioRetornoDTO;
 import com.finance_ai_backend.api.domain.dtos.RetornoClassificacaoDTO;
 import com.finance_ai_backend.api.domain.dtos.SugestoesRetornoDTO;
 import com.finance_ai_backend.api.domain.dtos.TransacaoInputDTO;
+import com.finance_ai_backend.api.domain.exceptions.PerfilNaoEncontradoException;
 import com.finance_ai_backend.api.domain.models.CategoriaEnum;
 import com.finance_ai_backend.api.domain.models.PerfilUsuario;
 import com.finance_ai_backend.api.domain.models.Transacao;
@@ -145,6 +147,16 @@ public class TransacoesService {
             .sugestoesPerfilUsuario(sugestoes.sugestoesAtivas())
             .perfilCategorizado(analisePerfilRetornoDTO.perfil())
             .build()
+        );
+    }
+
+    public PerfilUsuarioRetornoDTO buscarPerfil(Usuario usuario) {
+        PerfilUsuario perfilUsuario = perfilUsuarioRepositorio.findById(usuario.getPk())
+            .orElseThrow(() -> new PerfilNaoEncontradoException("Perfil não encontrado para o usuário"));
+
+        return new PerfilUsuarioRetornoDTO(
+            perfilUsuario.getPerfilCategorizado(),
+            perfilUsuario.getSugestoesPerfilUsuario()
         );
     }
 }

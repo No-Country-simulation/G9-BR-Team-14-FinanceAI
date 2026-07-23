@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import com.finance_ai_backend.api.domain.exceptions.CredenciaisInvalidasException;
+import com.finance_ai_backend.api.domain.exceptions.PerfilNaoEncontradoException;
 import com.finance_ai_backend.api.domain.exceptions.TokenInvalidoException;
 
 @RestControllerAdvice
@@ -56,5 +57,12 @@ public class ValidationExceptionHandler {
         Map<String, String> erro = new HashMap<>();
         erro.put("erro", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
+    }
+
+    @ExceptionHandler(PerfilNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> handlePerfilNaoEncontrado(PerfilNaoEncontradoException ex) {
+        Map<String, String> erro = new HashMap<>();
+        erro.put("erro", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
     }
 }
