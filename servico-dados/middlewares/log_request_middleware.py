@@ -3,15 +3,16 @@ import logging
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
 logger = logging.getLogger("requests")
 
 
 class LogRequestMiddleware(BaseHTTPMiddleware):
-    """Middleware que imprime todas as entradas de dados recebidas pela API.
+    """Middleware que imprime todas as entradas e saídas de dados da API.
 
-    Loga metodo, path, query params, headers e o corpo (body) de cada
-    requisicao antes que ela seja processada pelos controllers.
+    Loga metodo, path, query params, headers e corpo (body) tanto da
+    requisicao quanto da resposta.
     """
 
     async def dispatch(self, request: Request, call_next):
@@ -41,4 +42,32 @@ class LogRequestMiddleware(BaseHTTPMiddleware):
         request._receive = receive
 
         response = await call_next(request)
-        return response
+
+        # Consome o corpo da resposta (stream) para poder logar
+        response_body_chunks = [chunk async for chunk in response.body_iterator]
+        response_body_bytes = b"".join(response_body_chunks)
+
+        try:
+            response_body_preview = (
+                json.loads(response_body_bytes) if response_body_bytes else None
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            response_body_preview = response_body_bytes.decode("utf-8", errors="replace")
+
+        response_log_data = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": response_body_preview,
+        }
+
+        print(f"[RESPONSE] {json.dumps(response_log_data, ensure_ascii=False, indent=2)}")
+        logger.info("Resposta enviada: %s", response_log_data)
+
+        # Recria a resposta com o mesmo corpo, ja que o body_iterator
+        # original foi consumido ao logar acima.
+        return Response(
+            content=response_body_bytes,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )

@@ -4,27 +4,27 @@ import pandas as pd
 random.seed()
 
 CATEGORIAS = [
-    "Alimentação", "Transporte", "Saúde", "Moradia", "Educação",
-    "Lazer", "Serviços", "Assinaturas", "Dívidas", "Outras",
+    "ALIMENTACAO", "TRANSPORTE", "SAUDE", "MORADIA", "EDUCACAO",
+    "LAZER", "SERVICOS", "ASSINATURAS", "DIVIDAS", "OUTRAS",
 ]
 
-RENDA_MIN = 1500
-RENDA_MAX = 20000
+RENDA_MIN = 1_500
+RENDA_MAX = 20_000
 
 # Peso-base médio de cada categoria no gasto total (soma = 1.0), refletindo
 # padrões reais de consumo: Moradia costuma dominar o orçamento, Assinaturas
 # e Serviços tendem a ser pequenos, Dívidas varia muito entre usuários.
 PESOS_BASE = {
-    "Moradia": 0.30,
-    "Alimentação": 0.18,
-    "Transporte": 0.12,
-    "Dívidas": 0.10,
-    "Saúde": 0.08,
-    "Educação": 0.07,
-    "Lazer": 0.07,
-    "Serviços": 0.04,
-    "Outras": 0.02,
-    "Assinaturas": 0.02,
+    "MORADIA": 0.30,
+    "ALIMENTACAO": 0.18,
+    "TRANSPORTE": 0.12,
+    "DIVIDAS": 0.10,
+    "SAUDE": 0.08,
+    "EDUCACAO": 0.07,
+    "LAZER": 0.07,
+    "SERVICOS": 0.04,
+    "OUTRAS": 0.02,
+    "ASSINATURAS": 0.02,
 }
 
 # Faixa de variação aleatória (jitter) aplicada a cada peso-base, simulando
@@ -32,16 +32,16 @@ PESOS_BASE = {
 # Dívidas tem faixa mais ampla (0 a 3x) para simular usuários sem nenhuma
 # dívida até usuários fortemente endividados.
 JITTER_POR_CATEGORIA = {
-    "Moradia": (0.6, 1.6),
-    "Alimentação": (0.6, 1.6),
-    "Transporte": (0.5, 1.8),
-    "Dívidas": (0.0, 3.0),
-    "Saúde": (0.4, 2.2),
-    "Educação": (0.3, 2.5),
-    "Lazer": (0.4, 2.2),
-    "Serviços": (0.4, 3.2),
-    "Outras": (0.4, 4.5),
-    "Assinaturas": (0.5, 3.5),
+    "MORADIA": (0.6, 1.6),
+    "ALIMENTACAO": (0.6, 1.6),
+    "TRANSPORTE": (0.5, 1.8),
+    "DIVIDAS": (0.0, 3.0),
+    "SAUDE": (0.4, 2.2),
+    "EDUCACAO": (0.3, 2.5),
+    "LAZER": (0.4, 2.2),
+    "SERVICOS": (0.4, 3.2),
+    "OUTRAS": (0.4, 4.5),
+    "ASSINATURAS": (0.5, 3.5),
 }
 
 
@@ -85,7 +85,7 @@ def gerar_usuario_bruto() -> dict:
     return linha
 
 
-def run(n_usuarios: int = 1000) -> pd.DataFrame:
+def run(n_usuarios: int = 3000) -> pd.DataFrame:
     usuarios = []
     for _ in range(n_usuarios):
         usuarios.append(gerar_usuario_bruto())

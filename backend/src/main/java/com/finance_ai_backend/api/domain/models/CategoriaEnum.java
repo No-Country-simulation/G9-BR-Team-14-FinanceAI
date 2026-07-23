@@ -1,6 +1,6 @@
 package com.finance_ai_backend.api.domain.models;
 
-public enum Categoria {
+public enum CategoriaEnum {
     ALIMENTACAO,
     TRANSPORTE,
     SAUDE,
@@ -11,5 +11,7 @@ public enum Categoria {
     ASSINATURAS,
     DIVIDAS,
     INVESTIMENTO,
+    POUPANCA,
+    GANHOS,
     OUTRAS
 }

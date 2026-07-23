@@ -26,7 +26,7 @@ def ruido_remover(texto: str, numero_caracteres=1):
 
 def run():
     resultado_final = []
-    itens_por_categoria = 400
+    itens_por_categoria = 1000
     porcentagem_de_itens_ruidosos = 0.2
     ruidos_lista = [
         lambda x: ruido_inserir(x),

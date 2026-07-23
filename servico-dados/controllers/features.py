@@ -22,15 +22,15 @@ from dto.schemas import DadosFinanceirosInput
 # ---------------------------------------------------------------------------
 def montar_features_financeiras(dados: DadosFinanceirosInput) -> dict:
     gastos = {
-        "gasto_alimentação": dados.gasto_alimentacao,
+        "gasto_alimentacao": dados.gasto_alimentacao,
         "gasto_transporte": dados.gasto_transporte,
-        "gasto_saúde": dados.gasto_saude,
+        "gasto_saude": dados.gasto_saude,
         "gasto_moradia": dados.gasto_moradia,
-        "gasto_educação": dados.gasto_educacao,
+        "gasto_educacao": dados.gasto_educacao,
         "gasto_lazer": dados.gasto_lazer,
-        "gasto_serviços": dados.gasto_servicos,
+        "gasto_servicos": dados.gasto_servicos,
         "gasto_assinaturas": dados.gasto_assinaturas,
-        "gasto_dívidas": dados.gasto_dividas,
+        "gasto_dividas": dados.gasto_dividas,
         "gasto_outras": dados.gasto_outras,
     }
 

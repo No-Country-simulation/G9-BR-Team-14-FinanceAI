@@ -59,3 +59,4 @@ docker-compose.local.yml
 .venv
 .env
 *.joblib
+backend/data/

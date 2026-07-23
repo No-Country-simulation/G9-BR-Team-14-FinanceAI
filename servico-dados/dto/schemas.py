@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel, Field
 
 class TransacaoInput(BaseModel):
@@ -6,7 +7,6 @@ class TransacaoInput(BaseModel):
         examples=["supermerc"],
         description="Texto bruto da descricao da transacao (ex: 'supermercado', 'uber').",
     )
-
 
 class TransacaoOutput(BaseModel):
     descricao: str
@@ -29,7 +29,6 @@ class DadosFinanceirosInput(BaseModel):
 
 class PerfilOutput(BaseModel):
     perfil: str
-    features_calculadas: dict
 
 
 class SugestoesOutput(BaseModel):

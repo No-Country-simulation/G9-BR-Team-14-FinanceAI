@@ -1,11 +1,10 @@
 package com.finance_ai_backend.api.domain.repositories;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -24,12 +23,10 @@ class TokenAcessoRepositorioTest {
     @Autowired
     private UsuarioRepositorio usuarioRepositorio;
 
-    private Usuario novoUsuario(String username, String email) {
+    private Usuario novoUsuario(String username) {
         return usuarioRepositorio.save(Usuario.builder()
                 .username(username)
-                .email(email)
                 .senhaHash("hash-fake")
-                .ativo(true)
                 .build());
     }
 
@@ -46,7 +43,7 @@ class TokenAcessoRepositorioTest {
 
     @Test
     void deveSalvarEEncontrarPorId() {
-        Usuario usuario = novoUsuario("joao.silva", "joao@teste.com");
+        Usuario usuario = novoUsuario("joao.silva");
         TokenAcesso salvo = tokenAcessoRepositorio.save(
                 novoToken(usuario, true, LocalDateTime.now().plusHours(1)));
 
@@ -64,7 +61,7 @@ class TokenAcessoRepositorioTest {
 
     @Test
     void deveMarcarTokenComoInvalidoAoRevogar() {
-        Usuario usuario = novoUsuario("maria.souza", "maria@teste.com");
+        Usuario usuario = novoUsuario("maria.souza");
         TokenAcesso salvo = tokenAcessoRepositorio.save(
                 novoToken(usuario, true, LocalDateTime.now().plusHours(1)));
 
@@ -79,7 +76,7 @@ class TokenAcessoRepositorioTest {
 
     @Test
     void devePersistirDataDeExpiracaoDoToken() {
-        Usuario usuario = novoUsuario("carlos.lima", "carlos@teste.com");
+        Usuario usuario = novoUsuario("carlos.lima");
         LocalDateTime expiraEm = LocalDateTime.now().plusHours(1);
         TokenAcesso salvo = tokenAcessoRepositorio.save(novoToken(usuario, true, expiraEm));
 
