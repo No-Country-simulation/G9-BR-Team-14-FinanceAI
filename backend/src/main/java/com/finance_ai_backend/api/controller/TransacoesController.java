@@ -40,5 +40,13 @@ public class TransacoesController {
         return ResponseEntity.noContent().build();
     }
     
+    @PostMapping("analisar")
+    public ResponseEntity<?> gerarAnaliseDePerfil(
+        @AuthenticationPrincipal Usuario usuario 
+    ) {
+        transacoesService.executarAnaliseFinanceira(usuario);
+        return ResponseEntity.noContent().build();
+    }
+    
 
 }

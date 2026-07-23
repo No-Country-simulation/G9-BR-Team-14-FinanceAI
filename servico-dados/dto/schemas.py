@@ -29,7 +29,6 @@ class DadosFinanceirosInput(BaseModel):
 
 class PerfilOutput(BaseModel):
     perfil: str
-    features_calculadas: dict
 
 
 class SugestoesOutput(BaseModel):

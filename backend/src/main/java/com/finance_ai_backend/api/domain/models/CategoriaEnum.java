@@ -11,5 +11,7 @@ public enum CategoriaEnum {
     ASSINATURAS,
     DIVIDAS,
     INVESTIMENTO,
+    POUPANCA,
+    GANHOS,
     OUTRAS
 }

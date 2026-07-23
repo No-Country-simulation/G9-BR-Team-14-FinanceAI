@@ -22,7 +22,7 @@ def predict_perfil(data: DadosFinanceirosInput):
 
     modelo = artefatos["modelo"]
     colunas = list(artefatos["colunas"])
-
+    
     features = montar_features_financeiras(data)
     df = montar_dataframe_ordenado(features, colunas)
 
@@ -31,4 +31,4 @@ def predict_perfil(data: DadosFinanceirosInput):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Erro ao gerar predicao: {exc}") from exc
 
-    return PerfilOutput(perfil=str(perfil), features_calculadas=features)
+    return PerfilOutput(perfil=str(perfil))

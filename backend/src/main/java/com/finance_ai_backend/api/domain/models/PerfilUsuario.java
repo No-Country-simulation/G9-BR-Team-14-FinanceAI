@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,20 +30,22 @@ import lombok.Setter;
 public class PerfilUsuario {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "pk", nullable = false, updatable = false)
+    @Column(name = "pk")
     private UUID pk;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_pk", nullable = false)
+    @OneToOne(fetch = FetchType.EAGER)
+    @MapsId
+    @JoinColumn(name = "pk")
     private Usuario usuario;
 
-    @Column(name = "pefil_categorizado")
+    @Column(name = "perfil_categorizado")
     private String perfilCategorizado;
 
+    @ElementCollection
+    @CollectionTable(name = "sugestoes_perfil_usuario", joinColumns = @JoinColumn(name = "perfil_usuario_pk"))
+    @Column(name = "sugestao")
     @Builder.Default
-    @Column(name = "sugestoes_perfil_usuario")
-    private List<SugestoesPerfilUsuarioEnum> sugestoePerfilUsuario  =  new ArrayList<SugestoesPerfilUsuarioEnum>();
+    private List<String> sugestoesPerfilUsuario = new ArrayList<>();
 
 }
 

@@ -28,7 +28,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# app.add_middleware(LogRequestMiddleware)
+app.add_middleware(LogRequestMiddleware)
 
 app.include_router(health_controller.router)
 app.include_router(transacoes_controller.router)
