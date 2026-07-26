@@ -60,3 +60,4 @@ docker-compose.local.yml
 .env
 *.joblib
 backend/data/
+ciencia-dados/modelos/*
