@@ -1,87 +1,202 @@
 # API de Modelos Financeiros (FastAPI)
 
-3 rotas, cada uma servindo um dos modelos treinados, protegidas por uma
-chave de API simples e trocável a qualquer momento.
+API de inferência com 3 modelos de Machine Learning para apoio financeiro:
 
-## 1. Estrutura
+1. **Classificação de transações** por descrição textual  
+2. **Classificação de perfil financeiro**  
+3. **Geração de sugestões financeiras personalizadas**  
 
-```
+Todas as rotas de predição são protegidas por `X-API-Key`.
+
+## Sumário
+
+- [Visão Geral](#visão-geral)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Pré-requisitos](#pré-requisitos)
+- [Instalação](#instalação)
+- [Configuração dos Modelos](#configuração-dos-modelos)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Execução Local](#execução-local)
+- [Autenticação](#autenticação)
+- [Endpoints](#endpoints)
+  - [`GET /health`](#get-health)
+  - [`POST /predict/transacoes`](#post-predicttransacoes--modelo-1)
+  - [`POST /predict/perfil`](#post-predictperfil--modelo-2)
+  - [`POST /predict/sugestoes`](#post-predictsugestoes--modelo-3)
+- [Observações Importantes](#observações-importantes)
+- [Erros Comuns e Diagnóstico](#erros-comuns-e-diagnóstico)
+- [Deploy em Produção](#deploy-em-produção)
+
+---
+
+## Visão Geral
+
+Esta API carrega artefatos `.joblib` em memória e expõe rotas HTTP para predição.  
+A chave de API é lida do `.env` e pode ser trocada sem reiniciar o servidor.
+
+---
+
+## Estrutura do Projeto
+
+```text
 api-modelos/
-├── .env                      # chave de API + caminhos de todos os artefatos
+├── .env
 ├── requirements.txt
 └── app/
-    ├── main.py                # rotas da API + montagem das features
-    ├── auth.py                # verificação da chave de API
-    ├── model_loader.py        # carregamento dos modelos/artefatos em memória
-    ├── schemas.py              # formato de entrada/saída (JSON)
-    └── models/                # coloque aqui os seus .joblib
-        ├── modelo.joblib               # Modelo 1: classificação de transações
-        ├── vetorizador.joblib          # Modelo 1: vetorizador de texto
-        ├── modelo_perfil.joblib        # Modelo 2: perfil financeiro
-        ├── colunas_perfil.joblib       # Modelo 2: ordem das 16 colunas
-        ├── modelo_sugestoes.joblib     # Modelo 3: sugestões
-        ├── colunas_sugestoes.joblib    # Modelo 3: ordem das 16 colunas
-        └── nomes_sugestoes.joblib      # Modelo 3: nomes das 13 sugestões
+    ├── main.py
+    ├── auth.py
+    ├── model_loader.py
+    ├── schemas.py
+    └── models/
+        ├── modelo.joblib
+        ├── vetorizador.joblib
+        ├── modelo_perfil.joblib
+        ├── colunas_perfil.joblib
+        ├── modelo_sugestoes.joblib
+        ├── colunas_sugestoes.joblib
+        └── nomes_sugestoes.joblib
 ```
 
-## 2. Instalação
+---
+
+## Pré-requisitos
+
+- Python 3.10+ (recomendado: 3.12)
+- `pip`
+- Ambiente virtual (`venv`)
+
+---
+
+## Instalação
 
 ```bash
 cd api-modelos
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+```
+
+### Ativar ambiente virtual
+
+Linux/macOS:
+```bash
+source venv/bin/activate
+```
+
+Windows (PowerShell):
+```powershell
+venv\Scripts\Activate.ps1
+```
+
+Instalar dependências:
+```bash
 pip install -r requirements.txt
 ```
 
-## 3. Colocar seus modelos
+---
 
-Copie os 7 arquivos `.joblib` para dentro de `app/models/`, com os nomes
-acima (ou ajuste os caminhos correspondentes no `.env`).
+## Configuração dos Modelos
 
-## 4. Rodar a API
+Copie os 7 arquivos `.joblib` para `app/models/` com os nomes esperados:
+
+- `modelo.joblib`
+- `vetorizador.joblib`
+- `modelo_perfil.joblib`
+- `colunas_perfil.joblib`
+- `modelo_sugestoes.joblib`
+- `colunas_sugestoes.joblib`
+- `nomes_sugestoes.joblib`
+
+Se os nomes/caminhos mudarem, ajuste no `.env`.
+
+---
+
+## Variáveis de Ambiente
+
+Exemplo de `.env`:
+
+```env
+API_KEY=troque-esta-chave-super-secreta
+
+MODELO_TRANSACOES_PATH=app/models/modelo.joblib
+VETORIZADOR_PATH=app/models/vetorizador.joblib
+
+MODELO_PERFIL_PATH=app/models/modelo_perfil.joblib
+COLUNAS_PERFIL_PATH=app/models/colunas_perfil.joblib
+
+MODELO_SUGESTOES_PATH=app/models/modelo_sugestoes.joblib
+COLUNAS_SUGESTOES_PATH=app/models/colunas_sugestoes.joblib
+NOMES_SUGESTOES_PATH=app/models/nomes_sugestoes.joblib
+```
+
+---
+
+## Execução Local
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-Documentação interativa (Swagger): http://localhost:8000/docs
+Acessos úteis:
 
-Verifique se tudo carregou certo:
+- Swagger: `http://localhost:8000/docs`
+- Healthcheck: `http://localhost:8000/health`
+
+Teste rápido:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-## 5. Trocar a chave de API
+---
 
-Edite `API_KEY` no `.env`. A API lê o arquivo do disco a cada requisição,
-então a troca já vale na próxima chamada — sem reiniciar o servidor.
+## Autenticação
 
-## 6. As 3 rotas
+As rotas de predição exigem header:
 
-Todas exigem o header `X-API-Key`.
+```http
+X-API-Key: sua-chave
+```
 
-### `POST /predict/transacoes` — Modelo 1
+A chave é lida do `.env` a cada requisição. Alterou no `.env`, já vale na próxima chamada.
 
-Entrada: só a descrição da transação (texto). Ela passa pelo
-`vetorizador.joblib` antes de ir para o modelo.
+---
+
+## Endpoints
+
+## `GET /health`
+
+Verifica se a API está online.
+
+Resposta esperada:
+```json
+{ "status": "ok" }
+```
+
+## `POST /predict/transacoes` — Modelo 1
+
+Classifica categoria com base na descrição textual.
+
+### Exemplo
 
 ```bash
 curl -X POST http://localhost:8000/predict/transacoes \
   -H "Content-Type: application/json" \
   -H "X-API-Key: troque-esta-chave-super-secreta" \
-  -d '{"descricao": "supermerc"}'
+  -d '{"descricao":"supermerc"}'
 ```
 
+Resposta:
 ```json
 { "descricao": "supermerc", "categoria": "Alimentação" }
 ```
 
-### `POST /predict/perfil` — Modelo 2
+---
 
-Entrada: as 12 features "cruas" (os 4 calculados — `total_gasto`,
-`percentual_gasto`, `percentual_investido`, `saldo` — são derivados
-automaticamente no backend, não precisam ser enviados).
+## `POST /predict/perfil` — Modelo 2
+
+Entrada com 12 variáveis brutas.  
+A API calcula automaticamente mais 4 features derivadas, totalizando 16.
+
+### Exemplo
 
 ```bash
 curl -X POST http://localhost:8000/predict/perfil \
@@ -103,18 +218,24 @@ curl -X POST http://localhost:8000/predict/perfil \
   }'
 ```
 
+Resposta (exemplo):
 ```json
 {
   "perfil": "Saudavel",
-  "features_calculadas": { "renda_mensal": 10000, "...": "..." }
+  "features_calculadas": {
+    "renda_mensal": 10000
+  }
 }
 ```
 
-### `POST /predict/sugestoes` — Modelo 3
+---
 
-Mesma entrada do `/predict/perfil` (reaproveita as 16 features). A saída
-já vem traduzida: o vetor binário de 13 posições é cruzado com
-`nomes_sugestoes.joblib` para você saber quais sugestões foram ativadas.
+## `POST /predict/sugestoes` — Modelo 3
+
+Mesma entrada do endpoint de perfil.  
+Saída traz sugestões ativas com base no vetor de predição multilabel.
+
+### Exemplo
 
 ```bash
 curl -X POST http://localhost:8000/predict/sugestoes \
@@ -136,6 +257,7 @@ curl -X POST http://localhost:8000/predict/sugestoes \
   }'
 ```
 
+Resposta (exemplo):
 ```json
 {
   "sugestoes_ativas": ["manter_bom_controle_financeiro"],
@@ -143,11 +265,20 @@ curl -X POST http://localhost:8000/predict/sugestoes \
 }
 ```
 
-## 7. ⚠️ Ponto de atenção: fórmulas das features calculadas
+---
 
-Os campos `total_gasto`, `percentual_gasto`, `percentual_investido` e
-`saldo` são calculados em `app/main.py`, na função
-`montar_features_financeiras()`, assim:
+## Observações Importantes
+
+### 1) Consistência das fórmulas de features derivadas
+
+As features abaixo são calculadas no backend:
+
+- `total_gasto`
+- `percentual_gasto`
+- `percentual_investido`
+- `saldo`
+
+Lógica atual (em `montar_features_financeiras()`):
 
 ```python
 total_gasto = soma de todos os gasto_*
@@ -156,30 +287,50 @@ percentual_investido = valor_investido / renda_mensal
 saldo = renda_mensal - total_gasto - valor_investido
 ```
 
-Essa é a leitura mais direta dos nomes das colunas, mas **confirme que bate
-exatamente** com o código de pré-processamento que você usou no
-treinamento original. Se a fórmula real for diferente (ex: `saldo` sem
-descontar o investido, ou percentuais em escala 0–100 em vez de 0–1), o
-modelo vai receber valores fora do padrão que ele aprendeu e a previsão
-pode sair errada **sem nenhum erro de execução**. Se precisar, me passa a
-fórmula exata usada no treino que eu ajusto essa função.
+Se essas fórmulas não forem **idênticas** às do treinamento, o modelo pode prever errado sem lançar erro técnico.
 
-## 8. Ordem das colunas — por que não está hardcoded
+---
 
-Nenhuma das rotas assume a ordem das 16 colunas manualmente: `/predict/perfil`
-e `/predict/sugestoes` sempre carregam `colunas_perfil.joblib` /
-`colunas_sugestoes.joblib` do disco e reordenam o DataFrame com base neles
-(`montar_dataframe_ordenado()` em `main.py`). Se o nome de alguma coluna
-não bater com o que a função `montar_features_financeiras()` calcula, a API
-retorna erro 500 explicando exatamente qual coluna está faltando — em vez
-de silenciosamente prever errado.
+### 2) Ordem das colunas não é fixa no código
 
-## 9. Deploy em produção
+A API não “chuta” ordem de colunas.  
+Ela usa:
 
-Troque `--reload` por um processo gerenciado, ex:
+- `colunas_perfil.joblib`
+- `colunas_sugestoes.joblib`
+
+Se faltar alguma coluna esperada, retorna erro explícito, evitando inferência silenciosamente incorreta.
+
+---
+
+### 3) Segurança básica
+
+- Não versione `.env` no Git
+- Troque `API_KEY` por valor forte em produção
+- Considere autenticação robusta (JWT/OAuth2) para ambientes críticos
+
+---
+
+## Erros Comuns e Diagnóstico
+
+- **401 Unauthorized**: `X-API-Key` ausente ou inválido
+- **500 ao prever**: arquivo `.joblib` ausente/incompatível ou coluna faltando
+- **Predições estranhas**: divergência entre pré-processamento de treino e API
+- **Swagger abre, mas rota falha**: checar paths dos artefatos no `.env`
+
+---
+
+## Deploy em Produção
+
+Não usar `--reload` em produção.
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
 ```
 
-Rode atrás de um proxy (nginx) com HTTPS e considere empacotar com Docker.
+Recomendações:
+
+- Executar atrás de proxy reverso (Nginx)
+- Habilitar HTTPS
+- Containerizar com Docker
+- Centralizar logs e monitoramento
