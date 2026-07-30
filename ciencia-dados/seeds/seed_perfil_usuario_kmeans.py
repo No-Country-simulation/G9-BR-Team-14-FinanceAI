@@ -15,7 +15,7 @@ def gerar_linha(soma_alvo):
     return valores
 
 
-def gerar_tabela(numero_linhas_iguais=6, numero_linhas_abaixo=2, numero_linhas_acima=2, pct_minima=60, pct_maxima=120, seed=None):
+def gerar_tabela(numero_linhas_iguais=6, numero_linhas_abaixo=2, numero_linhas_acima=2, pct_minima=60, pct_maxima=120, seed=42):
     np.random.seed(seed)
 
     linhas = []

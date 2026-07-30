@@ -16,7 +16,6 @@ OCI_PREFIX=environ['OCI_PREFIX']
 
 # --- Modelo 1: Classificacao de transacoes ---
 MODELO_TRANSACOES=environ['MODELO_TRANSACOES']
-VETORIZADOR_TRANSACOES=environ['VETORIZADOR_TRANSACOES']
 
 # --- Modelo 2: Perfil financeiro ---
 MODELO_PERFIL=environ['MODELO_PERFIL']
@@ -25,4 +24,3 @@ COLUNAS_PERFIL=environ['COLUNAS_PERFIL']
 # --- Modelo 3: Sugestoes ---
 MODELO_SUGESTOES=environ['MODELO_SUGESTOES']
 COLUNAS_SUGESTOES=environ['COLUNAS_SUGESTOES']
-NOMES_SUGESTOES=environ['NOMES_SUGESTOES']

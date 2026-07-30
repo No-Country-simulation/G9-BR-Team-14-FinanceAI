@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from auth import verify_api_key
 from dto.schemas import TransacaoInput, TransacaoOutput
-from infra.model_loader import registry
+from infra.model_loader import registro_modelos
+from services.transacoes_service import TransacaoService
 
 router = APIRouter(tags=["predicao"])
 
@@ -15,21 +16,8 @@ router = APIRouter(tags=["predicao"])
     dependencies=[Depends(verify_api_key)],
 )
 def predict_transacao(data: TransacaoInput):
-    try:
-        artefatos = registry.get("transacoes")
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-
-    modelo = artefatos["modelo"]
-    vetorizador = artefatos["vetorizador"]
-
-    try:
-        vetor = vetorizador.transform([data.descricao])
-        categoria = modelo.predict(vetor)[0]
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Erro ao gerar predicao: {exc}") from exc
-
-    return TransacaoOutput(descricao=data.descricao, categoria=str(categoria))
+    categoria, pocentagem_certeza = TransacaoService.classificar_despesa(data.descricao)
+    return TransacaoOutput(descricao=data.descricao, categoria=str(categoria), pocentagem_certeza=pocentagem_certeza)
 
 @router.post(
     "/predict/lote_transacoes",
@@ -37,25 +25,11 @@ def predict_transacao(data: TransacaoInput):
     dependencies=[Depends(verify_api_key)],
 )
 def predict_transacao(data: List[TransacaoInput]):
-    try:
-        artefatos = registry.get("transacoes")
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-
-    modelo = artefatos["modelo"]
-    vetorizador = artefatos["vetorizador"]
     resultado = []
 
     for item in data:
-        try:
-            vetor = vetorizador.transform([item.descricao])
-            categoria = modelo.predict(vetor)[0]
-        except Exception as exc:
-            raise HTTPException(status_code=400, detail=f"Erro ao gerar predicao: {exc}") from exc
-        
-        else:
-            resultado.append(
-                TransacaoOutput(descricao=item.descricao, categoria=str(categoria))
-            )
+        categoria, pocentagem_certeza = TransacaoService.classificar_despesa(item.descricao)
+        resultado.append(
+            TransacaoOutput(descricao=item.descricao, categoria=str(categoria), pocentagem_certeza=pocentagem_certeza)
+        )
     return resultado
-

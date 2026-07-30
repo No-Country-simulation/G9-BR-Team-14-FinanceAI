@@ -11,25 +11,27 @@ class TransacaoInput(BaseModel):
 class TransacaoOutput(BaseModel):
     descricao: str
     categoria: str
+    pocentagem_certeza: float
 
 class DadosFinanceirosInput(BaseModel):
-    renda_mensal: float = Field(..., examples=[10000])
-    valor_investido: float = Field(..., examples=[3000])
-    gasto_alimentacao: float = Field(..., examples=[500])
-    gasto_transporte: float = Field(..., examples=[300])
-    gasto_saude: float = Field(..., examples=[300])
-    gasto_moradia: float = Field(..., examples=[1000])
-    gasto_educacao: float = Field(..., examples=[200])
-    gasto_lazer: float = Field(..., examples=[200])
-    gasto_servicos: float = Field(..., examples=[100])
-    gasto_assinaturas: float = Field(..., examples=[50])
-    gasto_dividas: float = Field(..., examples=[100])
-    gasto_outras: float = Field(..., examples=[100])
+    procentagem_gastos: float
+    porcentagem_poupanca: float
 
 
 class PerfilOutput(BaseModel):
     perfil: str
 
-
+class SugestoesInput(BaseModel):
+    ALIMENTACAO: float = Field(100.0)
+    TRANSPORTE: float = Field(100.0)
+    SAUDE: float = Field(100.0)
+    MORADIA: float = Field(100.0)
+    EDUCACAO: float = Field(100.0)
+    LAZER: float = Field(100.0)
+    SERVICOS: float = Field(100.0)
+    ASSINATURAS: float = Field(100.0)
+    DIVIDAS: float = Field(100.0)
+    POUPANCA: float = Field(100.0)
+   
 class SugestoesOutput(BaseModel):
     sugestoes_ativas: list[str]
