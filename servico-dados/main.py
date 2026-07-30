@@ -8,13 +8,22 @@ from controllers import (
     sugestoes_controller,
     transacoes_controller,
 )
-from infra.model_loader import registry
+from infra.model_loader import registro_modelos
 from middlewares.log_request_middleware import LogRequestMiddleware
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await registry.load_local_all()
+    logger.info("Carregando modelos")
+    await registro_modelos.load_all()
     yield
 
 

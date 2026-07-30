@@ -1,4 +1,5 @@
 import io
+import logging
 import boto3
 import joblib
 from botocore.config import Config
@@ -11,6 +12,9 @@ from infra.config import (
     OCI_S3_ACCESS_KEY,
     OCI_S3_SECRET_KEY
 )
+
+
+logger = logging.getLogger(__name__) 
 
 class StorageConnection:
     def __init__(self):
@@ -31,6 +35,8 @@ class StorageConnection:
         )
 
     def obtem_item_de_modelo(self, nome_objeto):
+        logger.info(f"Carregando modelo {nome_objeto}")
+
         chave_completa = f"{OCI_PREFIX}/{nome_objeto}"
 
         objeto = self.cliente.get_object(Bucket=OCI_BUCKET_NAME, Key=chave_completa)
