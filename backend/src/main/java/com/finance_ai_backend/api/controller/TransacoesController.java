@@ -16,10 +16,14 @@ import com.finance_ai_backend.api.domain.models.Usuario;
 import com.finance_ai_backend.api.services.TransacoesService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import jakarta.validation.Valid;
 
-
-
+@Tag(name = "Transações", description = "Envio de transações financeiras e geração/consulta do perfil do usuário")
 @RestController
 @RequestMapping("api/v1/")
 @SecurityRequirement(name = "bearerAuth") 
@@ -30,6 +34,15 @@ public class TransacoesController {
         this.transacoesService = transacoesService;
     }
 
+    @Operation(
+            summary = "Envia um lote de transações",
+            description = "Recebe uma lista de transações financeiras do usuário autenticado e as salva para posterior análise"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Transações salvas com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Uma ou mais transações inválidas"),
+            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
+    })
     @PostMapping("transacoes")
     public ResponseEntity<?> gerarTrasacoesEmLote(
         @Valid @RequestBody List<TransacaoInputDTO> transacaoInputDTOs,
@@ -41,7 +54,15 @@ public class TransacoesController {
         );
         return ResponseEntity.noContent().build();
     }
-    
+
+    @Operation(
+            summary = "Executa a análise financeira do usuário",
+            description = "Processa as transações salvas do usuário autenticado e gera seu perfil financeiro com base em modelo preditivo"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Análise executada com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
+    })
     @PostMapping("analisar")
     public ResponseEntity<?> gerarAnaliseDePerfil(
         @AuthenticationPrincipal Usuario usuario 
@@ -50,6 +71,15 @@ public class TransacoesController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Busca o perfil financeiro do usuário",
+            description = "Retorna o perfil financeiro categorizado e as sugestões geradas para o usuário autenticado"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil encontrado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido"),
+            @ApiResponse(responseCode = "404", description = "Perfil ainda não foi gerado para o usuário")
+    })
     @GetMapping("perfil")
     public ResponseEntity<PerfilUsuarioRetornoDTO> buscarPerfil(
         @AuthenticationPrincipal Usuario usuario
