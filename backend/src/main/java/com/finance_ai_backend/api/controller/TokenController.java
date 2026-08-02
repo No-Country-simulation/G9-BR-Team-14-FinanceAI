@@ -15,6 +15,7 @@ import com.finance_ai_backend.api.services.TokenService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "Token", description = "Geração e revogação de tokens de autenticação (login e logout)")
 @RestController
@@ -30,11 +31,19 @@ public class TokenController {
         this.tokenService = tokenService;
     }
 
+    @Operation(
+            summary = "Gera um token de autenticação",
+            description = "Autentica o usuário com login e senha, retornando um token JWT para uso nas demais rotas da API"
+    )
     @PostMapping()
     public TokenRespostaDTO gerarToken(@RequestBody @Valid TokenGeracaoDTO dto) {
         return tokenService.gerarToken(dto);
     }
 
+    @Operation(
+            summary = "Revoga um token (logout)",
+            description = "Invalida o token informado no header Authorization, adicionando-o à blacklist para impedir seu uso futuro"
+    )
     @PostMapping("blacklist")
     public String blacklistToken(@RequestHeader("Authorization") String cabecalhoAutorizacao) {
         if (cabecalhoAutorizacao == null || !cabecalhoAutorizacao.startsWith(PREFIXO_BEARER)) {
