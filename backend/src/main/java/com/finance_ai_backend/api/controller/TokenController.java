@@ -16,6 +16,8 @@ import com.finance_ai_backend.api.services.TokenService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Tag(name = "Token", description = "Geração e revogação de tokens de autenticação (login e logout)")
 @RestController
@@ -31,6 +33,11 @@ public class TokenController {
         this.tokenService = tokenService;
     }
 
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Token gerado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Login ou senha não informados"),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+    })
     @Operation(
             summary = "Gera um token de autenticação",
             description = "Autentica o usuário com login e senha, retornando um token JWT para uso nas demais rotas da API"
@@ -40,6 +47,10 @@ public class TokenController {
         return tokenService.gerarToken(dto);
     }
 
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Header Authorization ausente ou inválido")
+    })
     @Operation(
             summary = "Revoga um token (logout)",
             description = "Invalida o token informado no header Authorization, adicionando-o à blacklist para impedir seu uso futuro"
