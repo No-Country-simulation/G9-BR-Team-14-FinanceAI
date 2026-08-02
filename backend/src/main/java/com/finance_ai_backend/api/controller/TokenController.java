@@ -14,7 +14,9 @@ import com.finance_ai_backend.api.domain.exceptions.TokenInvalidoException;
 import com.finance_ai_backend.api.services.TokenService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Token", description = "Geração e revogação de tokens de autenticação (login e logout)")
 @RestController
 @RequestMapping("token")
 @SecurityRequirements
