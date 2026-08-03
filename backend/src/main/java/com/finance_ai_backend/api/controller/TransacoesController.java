@@ -44,7 +44,7 @@ public class TransacoesController {
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
     })
     @PostMapping("transacoes")
-    public ResponseEntity<?> gerarTrasacoesEmLote(
+    public ResponseEntity<Void> gerarTrasacoesEmLote(
         @Valid @RequestBody List<TransacaoInputDTO> transacaoInputDTOs,
         @AuthenticationPrincipal Usuario usuario 
     ) {
@@ -64,7 +64,7 @@ public class TransacoesController {
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
     })
     @PostMapping("analisar")
-    public ResponseEntity<?> gerarAnaliseDePerfil(
+    public ResponseEntity<Void> gerarAnaliseDePerfil(
         @AuthenticationPrincipal Usuario usuario 
     ) {
         transacoesService.executarAnaliseFinanceira(usuario);
