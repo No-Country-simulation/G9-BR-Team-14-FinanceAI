@@ -1,88 +1,161 @@
 # API de Modelos Financeiros (FastAPI)
 
-3 rotas, cada uma servindo um dos modelos treinados, protegidas por uma
-chave de API simples e trocável a qualquer momento.
+API para inferência de **3 modelos de Machine Learning** no contexto financeiro, com autenticação via **X-API-Key** e carregamento de artefatos `.joblib`.
 
-## 1. Estrutura
+---
 
-```
+## 📌 Visão Geral
+
+Esta API expõe três rotas de predição:
+
+1. **Classificação de transações** (`/predict/transacoes`)
+2. **Classificação de perfil financeiro** (`/predict/perfil`)
+3. **Geração de sugestões financeiras** (`/predict/sugestoes`)
+
+A autenticação é feita por chave de API, configurada em variável de ambiente, permitindo troca rápida sem alterar código-fonte.
+
+---
+
+## 🧱 Estrutura do Projeto
+
+```text
 api-modelos/
-├── .env                      # chave de API + caminhos de todos os artefatos
+├── .env                              # chave de API + caminhos dos artefatos
 ├── requirements.txt
 └── app/
-    ├── main.py                # rotas da API + montagem das features
-    ├── auth.py                # verificação da chave de API
-    ├── model_loader.py        # carregamento dos modelos/artefatos em memória
-    ├── schemas.py              # formato de entrada/saída (JSON)
-    └── models/                # coloque aqui os seus .joblib
-        ├── modelo.joblib               # Modelo 1: classificação de transações
-        ├── vetorizador.joblib          # Modelo 1: vetorizador de texto
-        ├── modelo_perfil.joblib        # Modelo 2: perfil financeiro
-        ├── colunas_perfil.joblib       # Modelo 2: ordem das 16 colunas
-        ├── modelo_sugestoes.joblib     # Modelo 3: sugestões
-        ├── colunas_sugestoes.joblib    # Modelo 3: ordem das 16 colunas
-        └── nomes_sugestoes.joblib      # Modelo 3: nomes das 13 sugestões
+    ├── main.py                       # rotas + montagem das features
+    ├── auth.py                       # validação da X-API-Key
+    ├── model_loader.py               # carregamento de modelos/artefatos
+    ├── schemas.py                    # contratos de entrada/saída (Pydantic)
+    └── models/
+        ├── modelo.joblib             # Modelo 1: classificação de transações
+        ├── vetorizador.joblib        # Modelo 1: vetorizador de texto
+        ├── modelo_perfil.joblib      # Modelo 2: perfil financeiro
+        ├── colunas_perfil.joblib     # Modelo 2: ordem das 16 colunas
+        ├── modelo_sugestoes.joblib   # Modelo 3: sugestões
+        ├── colunas_sugestoes.joblib  # Modelo 3: ordem das 16 colunas
+        └── nomes_sugestoes.joblib    # Modelo 3: nomes das 13 sugestões
 ```
 
-## 2. Instalação
+---
+
+## ✅ Requisitos
+
+- Python 3.10+ (recomendado 3.12)
+- pip atualizado
+- Git
+
+---
+
+## ⚙️ Instalação
 
 ```bash
 cd api-modelos
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+python -m venv .venv
+
+# Linux/macOS
+source .venv/bin/activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt
 ```
 
-## 3. Colocar seus modelos
+---
 
-Copie os 7 arquivos `.joblib` para dentro de `app/models/`, com os nomes
-acima (ou ajuste os caminhos correspondentes no `.env`).
+## 🔐 Configuração de Ambiente
 
-## 4. Rodar a API
+Crie o arquivo `.env` na raiz do projeto:
 
+```env
+API_KEY=troque-esta-chave-super-secreta
+
+MODEL_TRANSACOES_PATH=app/models/modelo.joblib
+VETORIZADOR_TRANSACOES_PATH=app/models/vetorizador.joblib
+
+MODEL_PERFIL_PATH=app/models/modelo_perfil.joblib
+COLUNAS_PERFIL_PATH=app/models/colunas_perfil.joblib
+
+MODEL_SUGESTOES_PATH=app/models/modelo_sugestoes.joblib
+COLUNAS_SUGESTOES_PATH=app/models/colunas_sugestoes.joblib
+NOMES_SUGESTOES_PATH=app/models/nomes_sugestoes.joblib
+```
+
+> Nunca versione chave real de API em repositório público.
+
+---
+
+## 📦 Modelos e Artefatos
+
+Copie os arquivos `.joblib` para `app/models/` com os nomes esperados  
+**ou** ajuste os caminhos no `.env`.
+
+---
+
+## ▶️ Executando a API
+
+### Desenvolvimento
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-Documentação interativa (Swagger): http://localhost:8000/docs
+### Produção (exemplo)
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+```
 
-Verifique se tudo carregou certo:
+Documentação interativa (Swagger):
+- `http://localhost:8000/docs`
 
+Health check:
 ```bash
 curl http://localhost:8000/health
 ```
 
-## 5. Trocar a chave de API
+---
 
-Edite `API_KEY` no `.env`. A API lê o arquivo do disco a cada requisição,
-então a troca já vale na próxima chamada — sem reiniciar o servidor.
+## 🔑 Autenticação
 
-## 6. As 3 rotas
+Todas as rotas de predição exigem o header:
 
-Todas exigem o header `X-API-Key`.
+```http
+X-API-Key: sua-chave
+```
 
-### `POST /predict/transacoes` — Modelo 1
+Se a chave estiver ausente ou inválida, a API retorna erro de autenticação.
 
-Entrada: só a descrição da transação (texto). Ela passa pelo
-`vetorizador.joblib` antes de ir para o modelo.
+---
 
+## 🧪 Endpoints
+
+## 1) `POST /predict/transacoes`
+
+Classifica a categoria da transação a partir da descrição textual.
+
+### Exemplo de request
 ```bash
 curl -X POST http://localhost:8000/predict/transacoes \
   -H "Content-Type: application/json" \
   -H "X-API-Key: troque-esta-chave-super-secreta" \
-  -d '{"descricao": "supermerc"}'
+  -d '{"descricao": "supermercado"}'
 ```
 
+### Exemplo de response
 ```json
-{ "descricao": "supermerc", "categoria": "Alimentação" }
+{
+  "descricao": "supermercado",
+  "categoria": "Alimentação"
+}
 ```
 
-### `POST /predict/perfil` — Modelo 2
+---
 
-Entrada: as 12 features "cruas" (os 4 calculados — `total_gasto`,
-`percentual_gasto`, `percentual_investido`, `saldo` — são derivados
-automaticamente no backend, não precisam ser enviados).
+## 2) `POST /predict/perfil`
 
+Prediz perfil financeiro com base em 12 features de entrada.
+
+### Exemplo de request
 ```bash
 curl -X POST http://localhost:8000/predict/perfil \
   -H "Content-Type: application/json" \
@@ -103,19 +176,23 @@ curl -X POST http://localhost:8000/predict/perfil \
   }'
 ```
 
+### Exemplo de response
 ```json
 {
   "perfil": "Saudavel",
-  "features_calculadas": { "renda_mensal": 10000, "...": "..." }
+  "features_calculadas": {
+    "renda_mensal": 10000
+  }
 }
 ```
 
-### `POST /predict/sugestoes` — Modelo 3
+---
 
-Mesma entrada do `/predict/perfil` (reaproveita as 16 features). A saída
-já vem traduzida: o vetor binário de 13 posições é cruzado com
-`nomes_sugestoes.joblib` para você saber quais sugestões foram ativadas.
+## 3) `POST /predict/sugestoes`
 
+Gera sugestões financeiras com base nas mesmas features do endpoint de perfil.
+
+### Exemplo de request
 ```bash
 curl -X POST http://localhost:8000/predict/sugestoes \
   -H "Content-Type: application/json" \
@@ -136,6 +213,7 @@ curl -X POST http://localhost:8000/predict/sugestoes \
   }'
 ```
 
+### Exemplo de response
 ```json
 {
   "sugestoes_ativas": ["manter_bom_controle_financeiro"],
@@ -143,43 +221,61 @@ curl -X POST http://localhost:8000/predict/sugestoes \
 }
 ```
 
-## 7. ⚠️ Ponto de atenção: fórmulas das features calculadas
+---
 
-Os campos `total_gasto`, `percentual_gasto`, `percentual_investido` e
-`saldo` são calculados em `app/main.py`, na função
-`montar_features_financeiras()`, assim:
+## ⚠️ Observações importantes
 
-```python
-total_gasto = soma de todos os gasto_*
-percentual_gasto = total_gasto / renda_mensal
-percentual_investido = valor_investido / renda_mensal
-saldo = renda_mensal - total_gasto - valor_investido
-```
+### 1) Fórmulas das features calculadas
+As features derivadas são calculadas no backend (ex.: `total_gasto`, `percentual_gasto`, `percentual_investido`, `saldo`).
 
-Essa é a leitura mais direta dos nomes das colunas, mas **confirme que bate
-exatamente** com o código de pré-processamento que você usou no
-treinamento original. Se a fórmula real for diferente (ex: `saldo` sem
-descontar o investido, ou percentuais em escala 0–100 em vez de 0–1), o
-modelo vai receber valores fora do padrão que ele aprendeu e a previsão
-pode sair errada **sem nenhum erro de execução**. Se precisar, me passa a
-fórmula exata usada no treino que eu ajusto essa função.
+Valide se as fórmulas atuais estão **idênticas** às usadas no treinamento dos modelos.  
+Diferenças de escala (0–1 vs 0–100) ou definição de saldo podem degradar as previsões sem erro explícito.
 
-## 8. Ordem das colunas — por que não está hardcoded
+---
 
-Nenhuma das rotas assume a ordem das 16 colunas manualmente: `/predict/perfil`
-e `/predict/sugestoes` sempre carregam `colunas_perfil.joblib` /
-`colunas_sugestoes.joblib` do disco e reordenam o DataFrame com base neles
-(`montar_dataframe_ordenado()` em `main.py`). Se o nome de alguma coluna
-não bater com o que a função `montar_features_financeiras()` calcula, a API
-retorna erro 500 explicando exatamente qual coluna está faltando — em vez
-de silenciosamente prever errado.
+### 2) Ordem das colunas
+A API não depende de ordem hardcoded para as 16 colunas.  
+A ordem é carregada dos artefatos (`colunas_perfil.joblib` e `colunas_sugestoes.joblib`) para garantir consistência com o treinamento.
 
-## 9. Deploy em produção
+---
 
-Troque `--reload` por um processo gerenciado, ex:
+### 3) Segurança
+- Não commitar `.env`
+- Não expor `API_KEY` em screenshots, logs públicos ou código
+- Rotacionar a chave periodicamente
+- Em produção, usar HTTPS + proxy reverso (Nginx/Caddy)
 
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
-```
+---
 
-Rode atrás de um proxy (nginx) com HTTPS e considere empacotar com Docker.
+## 🧰 Testes com Postman
+
+Sugestão de coleção:
+- Pasta `Auth`: variável `apiKey`
+- Pasta `Predictions`: requests para `/predict/transacoes`, `/predict/perfil`, `/predict/sugestoes`
+- Header padrão em todas:
+  - `Content-Type: application/json`
+  - `X-API-Key: {{apiKey}}`
+
+---
+
+## 🐞 Troubleshooting rápido
+
+- **401/403**: chave ausente/incorreta no `X-API-Key`
+- **500 ao prever**: arquivo `.joblib` ausente/incompatível ou coluna faltante
+- **Erro de import**: dependências não instaladas corretamente (`pip install -r requirements.txt`)
+- **Swagger não abre**: servidor não iniciou ou porta em uso
+
+---
+
+## 🚀 Boas práticas de PR
+
+- Branch de feature dedicada (ex.: `feature/atualiza-readme-servico-dados`)
+- Commits claros e pequenos
+- PR com contexto, impacto e checklist de teste
+- Solicitar revisão do mantenedor responsável
+
+---
+
+## 📄 Licença
+
+Defina aqui a licença do projeto (ex.: MIT) conforme decisão do time.
