@@ -20,6 +20,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 
 import jakarta.validation.Valid;
 
@@ -40,7 +42,14 @@ public class TransacoesController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Transações salvas com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Uma ou mais transações inválidas"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Uma ou mais transações inválidas",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"descricao\": \"Esse item é necessário\"}")
+                    )
+            ),
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
     })
     @PostMapping("transacoes")
@@ -78,7 +87,14 @@ public class TransacoesController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Perfil encontrado com sucesso"),
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido"),
-            @ApiResponse(responseCode = "404", description = "Perfil ainda não foi gerado para o usuário")
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Perfil ainda não foi gerado para o usuário",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"erro\": \"Perfil não encontrado para o usuário\"}")
+                    )
+            )
     })
     @GetMapping("perfil")
     public ResponseEntity<PerfilUsuarioRetornoDTO> buscarPerfil(

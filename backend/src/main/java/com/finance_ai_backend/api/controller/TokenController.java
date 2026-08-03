@@ -18,6 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 
 @Tag(name = "Token", description = "Geração e revogação de tokens de autenticação (login e logout)")
 @RestController
@@ -34,9 +36,26 @@ public class TokenController {
     }
 
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Token gerado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Login ou senha não informados"),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Token gerado com sucesso"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Login ou senha não informados",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"login\": \"O campo login é obrigatório\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Credenciais inválidas",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"erro\": \"Credenciais inválidas\"}")
+                    )
+            )
     })
     @Operation(
             summary = "Gera um token de autenticação",
@@ -49,7 +68,14 @@ public class TokenController {
 
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Header Authorization ausente ou inválido")
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Header Authorization ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"erro\": \"Header Authorization ausente ou inválido\"}")
+                    )
+            )
     })
     @Operation(
             summary = "Revoga um token (logout)",
