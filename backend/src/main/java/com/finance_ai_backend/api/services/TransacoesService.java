@@ -58,8 +58,6 @@ public class TransacoesService {
         Usuario usuario, 
         List<TransacaoInputDTO> transacaoInputDTOs
     ){
-        
-
         List<Map<String, String>> listaDescricoes = transacaoInputDTOs
         .stream()
         .map(TransacaoInputDTO::getDescricao)
@@ -67,19 +65,28 @@ public class TransacoesService {
         .map(descricao -> Map.of("descricao", descricao))
         .collect(Collectors.toList());
         
-        Map<String, String> mapaDescricaoCategoria = restClient.post()
+        List<RetornoClassificacaoDTO> classificacoes = restClient.post()
         .uri("/lote_transacoes")
         .header(this.predictApiKeyHeaderName, this.apiKey)
         .body(listaDescricoes)
         .retrieve()
-        .body(new ParameterizedTypeReference<List<RetornoClassificacaoDTO>>() {})
+        .body(new ParameterizedTypeReference<List<RetornoClassificacaoDTO>>() {});
+
+        Map<String, String> mapaDescricaoCategoria = classificacoes
         .stream()
         .collect(Collectors.toMap(
             RetornoClassificacaoDTO::descricao,
-            RetornoClassificacaoDTO::categoria,
+            c -> {
+                String categoria = c.categoria();
+                if (categoria == null) return "OUTRAS";
+                categoria = categoria.toUpperCase();
+                // normalize known pluralization differences coming from the Python service
+                if (categoria.equals("OUTROS")) return "OUTRAS";
+                return categoria;
+            },
             (categoriaAntiga, categoriaNova) -> categoriaNova
         ));
-        
+
 
         List<Transacao> listaTransacoes = transacaoInputDTOs
         .stream()
@@ -89,7 +96,8 @@ public class TransacoesService {
                 .usuario(usuario)
                 .descricao(item.getDescricao())
                 .categoria(
-                    CategoriaEnum.valueOf(mapaDescricaoCategoria.get(item.getDescricao()))
+                    // map to CategoriaEnum safely: default to OUTRAS on mismatch
+                    toCategoriaEnum(mapaDescricaoCategoria.get(item.getDescricao()))
                 )
                 .valor(item.getValor())
                 .data(item.getData())
@@ -98,6 +106,17 @@ public class TransacoesService {
         .collect(Collectors.toList());
         
         transacaoRepositorio.saveAll(listaTransacoes);
+    }
+
+    public void salvarTransacao(String descricao) {
+        Map<String, String> request = Map.of("descricao", descricao);
+
+        restClient.post()
+                .uri("/transacoes")
+                .header(this.predictApiKeyHeaderName, this.apiKey)
+                .body(request)
+                .retrieve()
+                .body(RetornoClassificacaoDTO.class);
     }
 
     public void executarAnaliseFinanceira(Usuario usuario){
@@ -125,17 +144,54 @@ public class TransacoesService {
         .gastoOutras(totalPorCategoria.getOrDefault(CategoriaEnum.OUTRAS, BigDecimal.ZERO))
         .build();
 
+        double renda = analiseFinanceiraDTO.getRendaMensal() != null ? analiseFinanceiraDTO.getRendaMensal().doubleValue() : 0.0;
+
+        double totalGastos = (
+            analiseFinanceiraDTO.getGastoAlimentacao().doubleValue()
+            + analiseFinanceiraDTO.getGastoTransporte().doubleValue()
+            + analiseFinanceiraDTO.getGastoSaude().doubleValue()
+            + analiseFinanceiraDTO.getGastoMoradia().doubleValue()
+            + analiseFinanceiraDTO.getGastoEducacao().doubleValue()
+            + analiseFinanceiraDTO.getGastoLazer().doubleValue()
+            + analiseFinanceiraDTO.getGastoServicos().doubleValue()
+            + analiseFinanceiraDTO.getGastoAssinaturas().doubleValue()
+            + analiseFinanceiraDTO.getGastoDividas().doubleValue()
+            + analiseFinanceiraDTO.getGastoOutras().doubleValue()
+        );
+
+        double porcentagemPoupanca = renda != 0.0 ? analiseFinanceiraDTO.getValorInvestido().doubleValue() / renda : 0.0;
+        double porcentagemGastos = renda != 0.0 ? totalGastos / renda : 0.0;
+
+        Map<String, Object> perfilRequest = Map.of(
+            "porcentagem_gastos", porcentagemGastos,
+            "porcentagem_poupanca", porcentagemPoupanca
+        );
+
         AnalisePerfilRetornoDTO analisePerfilRetornoDTO = restClient.post()
         .uri("/perfil")
         .header(this.predictApiKeyHeaderName, this.apiKey)
-        .body(analiseFinanceiraDTO)
+        .body(perfilRequest)
         .retrieve()
         .body(AnalisePerfilRetornoDTO.class);
+
+        // Build sugestões request expected by servico-dados: uppercase category keys
+        Map<String, Object> sugestoesRequest = Map.of(
+            "ALIMENTACAO", analiseFinanceiraDTO.getGastoAlimentacao().doubleValue(),
+            "TRANSPORTE", analiseFinanceiraDTO.getGastoTransporte().doubleValue(),
+            "SAUDE", analiseFinanceiraDTO.getGastoSaude().doubleValue(),
+            "MORADIA", analiseFinanceiraDTO.getGastoMoradia().doubleValue(),
+            "EDUCACAO", analiseFinanceiraDTO.getGastoEducacao().doubleValue(),
+            "LAZER", analiseFinanceiraDTO.getGastoLazer().doubleValue(),
+            "SERVICOS", analiseFinanceiraDTO.getGastoServicos().doubleValue(),
+            "ASSINATURAS", analiseFinanceiraDTO.getGastoAssinaturas().doubleValue(),
+            "DIVIDAS", analiseFinanceiraDTO.getGastoDividas().doubleValue(),
+            "POUPANCA", analiseFinanceiraDTO.getValorInvestido().doubleValue()
+        );
 
         SugestoesRetornoDTO sugestoes = restClient.post()
         .uri("/sugestoes")
         .header(this.predictApiKeyHeaderName, this.apiKey)
-        .body(analiseFinanceiraDTO)
+        .body(sugestoesRequest)
         .retrieve()
         .body(SugestoesRetornoDTO.class);
 
@@ -158,5 +214,16 @@ public class TransacoesService {
             perfilUsuario.getPerfilCategorizado(),
             perfilUsuario.getSugestoesPerfilUsuario()
         );
+    }
+
+    private CategoriaEnum toCategoriaEnum(String categoria) {
+        if (categoria == null) return CategoriaEnum.OUTRAS;
+        try {
+            return CategoriaEnum.valueOf(categoria);
+        } catch (IllegalArgumentException ex) {
+            // log warning and default to OUTRAS
+            System.err.println("Unknown category received from predict service: '" + categoria + "' - defaulting to OUTRAS");
+            return CategoriaEnum.OUTRAS;
+        }
     }
 }

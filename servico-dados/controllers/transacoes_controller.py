@@ -16,8 +16,8 @@ router = APIRouter(tags=["predicao"])
     dependencies=[Depends(verify_api_key)],
 )
 def predict_transacao(data: TransacaoInput):
-    categoria, pocentagem_certeza = TransacaoService.classificar_despesa(data.descricao)
-    return TransacaoOutput(descricao=data.descricao, categoria=str(categoria), pocentagem_certeza=pocentagem_certeza)
+    categoria, porcentagem_certeza = TransacaoService.classificar_despesa(data.descricao)
+    return TransacaoOutput(descricao=data.descricao, categoria=str(categoria), porcentagem_certeza=porcentagem_certeza)
 
 @router.post(
     "/predict/lote_transacoes",
@@ -28,8 +28,8 @@ def predict_transacao(data: List[TransacaoInput]):
     resultado = []
 
     for item in data:
-        categoria, pocentagem_certeza = TransacaoService.classificar_despesa(item.descricao)
+        categoria, porcentagem_certeza = TransacaoService.classificar_despesa(item.descricao)
         resultado.append(
-            TransacaoOutput(descricao=item.descricao, categoria=str(categoria), pocentagem_certeza=pocentagem_certeza)
+            TransacaoOutput(descricao=item.descricao, categoria=str(categoria), porcentagem_certeza=porcentagem_certeza)
         )
     return resultado
