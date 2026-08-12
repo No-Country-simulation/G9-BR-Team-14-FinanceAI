@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.finance_ai_backend.api.domain.dtos.PerfilUsuarioRetornoDTO;
 import com.finance_ai_backend.api.domain.dtos.TransacaoInputDTO;
+import com.finance_ai_backend.api.domain.dtos.RetornoClassificacaoDTO;
 import com.finance_ai_backend.api.domain.models.Usuario;
 import com.finance_ai_backend.api.services.TransacoesService;
 
@@ -61,6 +62,23 @@ public class TransacoesController {
             usuario,
             transacaoInputDTOs
         );
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Classifica uma transação (consulta sem salvar)",
+            description = "Classifica a categoria de uma única transação sem persistir"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Classificação retornada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Transação inválida"),
+            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
+    })
+    @PostMapping("transacao")
+    public ResponseEntity<Void> gerarTransacao(
+        @Valid @RequestBody TransacaoInputDTO transacaoInputDTO
+    ) {
+        transacoesService.salvarTransacao(transacaoInputDTO.getDescricao());
         return ResponseEntity.noContent().build();
     }
 

@@ -11,10 +11,10 @@ class TransacaoInput(BaseModel):
 class TransacaoOutput(BaseModel):
     descricao: str
     categoria: str
-    pocentagem_certeza: float
+    porcentagem_certeza: float
 
 class DadosFinanceirosInput(BaseModel):
-    procentagem_gastos: float
+    porcentagem_gastos: float
     porcentagem_poupanca: float
 
 

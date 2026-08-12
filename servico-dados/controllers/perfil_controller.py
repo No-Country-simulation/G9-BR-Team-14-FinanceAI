@@ -16,6 +16,6 @@ router = APIRouter(tags=["predicao"])
     dependencies=[Depends(verify_api_key)],
 )
 def predict_perfil(data: DadosFinanceirosInput):
-    perfil_data = PerfilService.prever_perfil(data.procentagem_gastos, data.porcentagem_poupanca)
+    perfil_data = PerfilService.prever_perfil(data.porcentagem_gastos, data.porcentagem_poupanca)
     print(perfil_data)
     return PerfilOutput(perfil=perfil_data['perfil'])

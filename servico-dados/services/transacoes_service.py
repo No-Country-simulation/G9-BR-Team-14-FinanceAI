@@ -24,6 +24,6 @@ class TransacaoService:
         confianca = pipeline.predict_proba([descricao])[0].max()
 
         if confianca < limite_confianca:
-            return "OUTROS", confianca
+            return "OUTRAS", confianca
 
         return categoria, confianca
