@@ -62,3 +62,4 @@ docker-compose.local.yml
 backend/data/
 ciencia-dados/modelos/*
 servico-dados/modelos/*
+data/
