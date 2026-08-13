@@ -36,10 +36,12 @@ class SugestoesPerfil:
         alertas = []
         for i, col in enumerate(colunas):
             diff_pct = ((usuario_original[i] - centro_original[i]) / (centro_original[i] + 1e-6)) * 100
-            
+            valor_pct = round(centro_original[i], 2) 
+
             if diff_pct > limiar and col in ALERTAS:
                 alertas.append({
                     "categoria": col,
+                    "procentagem_original": valor_pct,
                     "diferenca_pct": round(diff_pct, 1),
                     "mensagem": ALERTAS[col]
                 })
@@ -69,6 +71,8 @@ class SugestoesPerfil:
         resultado = cls.alertas_usuario(novo)
         
         for a in resultado['alertas']:
-            alertas_usuario.append(f"[{a['categoria']}] +{a['diferenca_pct']}% → {a['mensagem']}")
+            alertas_usuario.append(
+                f"[{a['categoria']}]: A porcentagem de gasto de outras pessoas do mesmo grupo é {a['procentagem_original']}%. Voce está gastando {a['diferenca_pct']}% a mais, {a['mensagem']}"
+            )
         
         return alertas_usuario
