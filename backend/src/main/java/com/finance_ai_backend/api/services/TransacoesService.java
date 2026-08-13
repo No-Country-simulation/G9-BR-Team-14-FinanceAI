@@ -174,18 +174,22 @@ public class TransacoesService {
         .retrieve()
         .body(AnalisePerfilRetornoDTO.class);
 
-        // Build sugestões request expected by servico-dados: uppercase category keys
+        // Build sugestões request expected by servico-dados: uppercase category keys.
+        // O modelo de sugestões foi treinado com percentuais de gasto em relação à
+        // renda mensal (podendo somar mais de 100% quando os gastos superam a renda),
+        // então cada categoria precisa ser convertida de valor bruto para percentual
+        // antes de ser enviada — nunca em reais.
         Map<String, Object> sugestoesRequest = Map.of(
-            "ALIMENTACAO", analiseFinanceiraDTO.getGastoAlimentacao().doubleValue(),
-            "TRANSPORTE", analiseFinanceiraDTO.getGastoTransporte().doubleValue(),
-            "SAUDE", analiseFinanceiraDTO.getGastoSaude().doubleValue(),
-            "MORADIA", analiseFinanceiraDTO.getGastoMoradia().doubleValue(),
-            "EDUCACAO", analiseFinanceiraDTO.getGastoEducacao().doubleValue(),
-            "LAZER", analiseFinanceiraDTO.getGastoLazer().doubleValue(),
-            "SERVICOS", analiseFinanceiraDTO.getGastoServicos().doubleValue(),
-            "ASSINATURAS", analiseFinanceiraDTO.getGastoAssinaturas().doubleValue(),
-            "DIVIDAS", analiseFinanceiraDTO.getGastoDividas().doubleValue(),
-            "POUPANCA", analiseFinanceiraDTO.getValorInvestido().doubleValue()
+            "ALIMENTACAO", percentualDaRenda(analiseFinanceiraDTO.getGastoAlimentacao().doubleValue(), renda),
+            "TRANSPORTE", percentualDaRenda(analiseFinanceiraDTO.getGastoTransporte().doubleValue(), renda),
+            "SAUDE", percentualDaRenda(analiseFinanceiraDTO.getGastoSaude().doubleValue(), renda),
+            "MORADIA", percentualDaRenda(analiseFinanceiraDTO.getGastoMoradia().doubleValue(), renda),
+            "EDUCACAO", percentualDaRenda(analiseFinanceiraDTO.getGastoEducacao().doubleValue(), renda),
+            "LAZER", percentualDaRenda(analiseFinanceiraDTO.getGastoLazer().doubleValue(), renda),
+            "SERVICOS", percentualDaRenda(analiseFinanceiraDTO.getGastoServicos().doubleValue(), renda),
+            "ASSINATURAS", percentualDaRenda(analiseFinanceiraDTO.getGastoAssinaturas().doubleValue(), renda),
+            "DIVIDAS", percentualDaRenda(analiseFinanceiraDTO.getGastoDividas().doubleValue(), renda),
+            "POUPANCA", percentualDaRenda(analiseFinanceiraDTO.getValorInvestido().doubleValue(), renda)
         );
 
         SugestoesRetornoDTO sugestoes = restClient.post()
@@ -214,6 +218,10 @@ public class TransacoesService {
             perfilUsuario.getPerfilCategorizado(),
             perfilUsuario.getSugestoesPerfilUsuario()
         );
+    }
+
+    private double percentualDaRenda(double valor, double renda) {
+        return renda != 0.0 ? (valor / renda) * 100 : 0.0;
     }
 
     private CategoriaEnum toCategoriaEnum(String categoria) {

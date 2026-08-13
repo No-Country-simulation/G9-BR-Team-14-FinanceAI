@@ -12,18 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.finance_ai_backend.api.domain.dtos.PerfilUsuarioRetornoDTO;
 import com.finance_ai_backend.api.domain.dtos.TransacaoInputDTO;
-import com.finance_ai_backend.api.domain.dtos.RetornoClassificacaoDTO;
 import com.finance_ai_backend.api.domain.models.Usuario;
 import com.finance_ai_backend.api.services.TransacoesService;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @Tag(name = "Transações", description = "Envio de transações financeiras e geração/consulta do perfil do usuário")
