@@ -1,116 +1,315 @@
-# Finance AI
+# FinanceAI
 
-Plataforma para gestão financeira pessoal com apoio de Machine Learning:
-classificação automática de transações, geração de perfil financeiro e
-sugestões de alertas personalizados.
+Plataforma de inteligência financeira que utiliza Machine Learning para transformar transações financeiras em informações: classificação de gastos, perfil financeiro e sugestões personalizadas.
 
-O projeto é um monorepo dividido em 3 módulos independentes:
+## Sobre o projeto
 
-| Módulo | Papel | Stack | Documentação |
-| --- | --- | --- | --- |
-| [`backend/`](backend/README.md) | API principal: autenticação, cadastro de usuários e transações, orquestração da análise financeira | Java 25 + Spring Boot | [backend/README.md](backend/README.md) |
-| [`servico-dados/`](servico-dados/readme.md) | API que expõe os modelos de ML treinados (classificação, perfil, sugestões) | Python + FastAPI | [servico-dados/readme.md](servico-dados/readme.md) |
-| [`ciencia-dados/`](ciencia-dados/README.md) | Notebooks e scripts para gerar dados sintéticos e treinar os modelos consumidos pelo `servico-dados` | Python + Jupyter + scikit-learn | [ciencia-dados/README.md](ciencia-dados/README.md) |
+O FinanceAI é uma solução desenvolvida para apoiar a tomada de decisões financeiras a partir da análise de transações do usuário. A plataforma combina:
 
----
-
-## Arquitetura (visão geral)
+- **Backend Java/Spring Boot** para API, segurança, regras de negócio e persistência;
+- **Python/FastAPI** para disponibilização dos modelos de Machine Learning;
+- **Ciência de Dados** para treinamento e preparação dos modelos;
+- **Banco de dados** para armazenamento das informações da aplicação;
+- **Oracle Cloud Infrastructure (OCI)** para armazenamento dos artefatos de Machine Learning.
 
 ```
-                 ┌───────────────────────┐
-   usuário  ───► │       backend         │
-                 │  (Java / Spring Boot) │
-                 │  auth, transações,    │
-                 │  perfil, sugestões    │
-                 └───────────┬───────────┘
-                             │ HTTP (RestClient + API key)
-                             ▼
-                 ┌───────────────────────┐
-                 │     servico-dados      │
-                 │   (Python / FastAPI)   │
-                 │ /predict/transacoes    │
-                 │ /predict/perfil        │
-                 │ /predict/sugestoes     │
-                 └───────────┬───────────┘
-                             │ carrega artefatos treinados
-                             ▼
-                 ┌───────────────────────┐
-                 │   OCI Object Storage   │
-                 │  (.joblib / .kv)       │
-                 └───────────▲───────────┘
-                             │ publica artefatos
-                             │
-                 ┌───────────┴───────────┐
-                 │     ciencia-dados       │
-                 │ notebooks de treino +   │
-                 │ geradores de dados      │
-                 │ sintéticos              │
-                 └───────────────────────┘
+Transações financeiras
+        │
+        ▼
+Classificação automática
+        │
+        ▼
+Consolidação dos dados
+        │
+        ├───────────────┐
+        ▼               ▼
+Perfil financeiro    Sugestões
+        │               │
+        └───────┬───────┘
+                ▼
+        Inteligência financeira
 ```
 
-- O **`backend`** autentica o usuário (JWT), recebe as transações e
-  delega toda predição de ML ao **`servico-dados`** via HTTP, usando uma
-  chave de API compartilhada entre os dois módulos.
-- O **`servico-dados`** não tem lógica de negócio nem persistência
-  própria: carrega os artefatos de modelo do bucket OCI Object Storage e
-  só expõe rotas de predição.
-- O **`ciencia-dados`** é o ambiente offline onde os modelos são
-  treinados a partir de dados sintéticos; os artefatos resultantes são
-  publicados no mesmo bucket consumido pelo `servico-dados`.
+## Problema
 
----
+O acompanhamento das próprias finanças pode ser difícil quando o usuário possui grande quantidade de transações e não consegue identificar facilmente:
 
-## Pré-requisitos gerais
+- onde está gastando;
+- quais categorias comprometem mais sua renda;
+- qual é seu comportamento financeiro;
+- onde existem oportunidades de redução de gastos;
+- quais ações podem melhorar sua organização financeira.
 
-- **Git**
-- **JDK 25** (para o `backend`)
-- **Python 3.12+** (para `servico-dados` e `ciencia-dados`)
-- Acesso a um bucket **OCI Object Storage** com os modelos treinados
-  (necessário para o `servico-dados` e para publicar novos modelos vindos
-  de `ciencia-dados`)
+O FinanceAI utiliza dados e Machine Learning para automatizar parte dessa análise.
 
----
+## Solução
 
-## Como rodar o projeto localmente
+**Backend Java** — aplicação principal: autenticação, autorização, gerenciamento de usuários, recebimento das transações, persistência, consolidação financeira, orquestração das análises, disponibilização dos resultados.
 
-Cada módulo tem seu próprio guia detalhado de configuração e execução.
-Resumo rápido, na ordem recomendada de subida:
+**Serviço Python** — camada de Machine Learning: classificação de transações, identificação de perfil financeiro, geração de sugestões e alertas.
 
-1. **`servico-dados`** (API de modelos) — configure o `.env` com as
-   credenciais do bucket OCI e a chave de API, depois:
-   ```bash
-   cd servico-dados
-   pip install -r requirements.txt
-   uvicorn main:app --reload --port 8000
-   ```
-   Detalhes: [servico-dados/readme.md](servico-dados/readme.md)
+**Ciência de Dados** — notebooks e scripts utilizados no desenvolvimento dos modelos.
 
-2. **`backend`** (API principal) — configure o `.env` com `JWT_SECRET` e
-   as variáveis `API_PREDICT_*` apontando para o `servico-dados` rodando
-   no passo anterior, depois:
-   ```bash
-   cd backend
-   ./mvnw spring-boot:run
-   ```
-   Detalhes: [backend/README.md](backend/README.md)
+**OCI** — os artefatos dos modelos são armazenados no Object Storage e carregados pelo serviço Python durante sua inicialização.
 
-3. **`ciencia-dados`** (opcional, só para retreinar modelos) —
-   ```bash
-   cd ciencia-dados
-   pip install -r requiriments.txt
-   jupyter lab
-   ```
-   Detalhes: [ciencia-dados/README.md](ciencia-dados/README.md)
+## Arquitetura
 
----
+```
+                      ┌───────────────────────┐
+                      │       Cliente         │
+                      │ Frontend / API Client │
+                      └───────────┬───────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │       BACKEND JAVA          │
+                    │      Spring Boot 4.1        │
+                    │                             │
+                    │ • Autenticação              │
+                    │ • Usuários                  │
+                    │ • Transações                │
+                    │ • Regras de negócio         │
+                    │ • Persistência              │
+                    └─────────────┬───────────────┘
+                                  │
+                            REST + API Key
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │       SERVIÇO PYTHON        │
+                    │          FastAPI            │
+                    │                             │
+                    │ • Classificação             │
+                    │ • Perfil financeiro         │
+                    │ • Sugestões/alertas         │
+                    └─────────────┬───────────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │          OCI                │
+                    │     Object Storage          │
+                    │                             │
+                    │ • Modelos ML                │
+                    │ • Artefatos de ML           │
+                    └─────────────────────────────┘
 
-## Observações importantes
+                    ┌─────────────────────────────┐
+                    │       Banco de Dados        │
+                    │                             │
+                    │ DEV  → H2                   │
+                    │ PROD → PostgreSQL           │
+                    └─────────────────────────────┘
+```
 
-- Nunca versionar arquivos `.env`, credenciais OCI ou artefatos de modelo
-  (`.joblib`/`.kv`) — todos já estão cobertos pelo `.gitignore` na raiz.
-- `backend` e `servico-dados` precisam compartilhar a mesma configuração
-  de chave de API (`API_KEY_PREDICT`/`API_KEY_PREDICT_HEADER_NAME` no
-  backend devem casar com `API_KEY`/`API_KEY_HEADER_NAME` no
-  servico-dados).
-- Para detalhes de endpoints, variáveis de ambiente e estrutura interna
-  de cada módulo, consulte o README específico linkado na tabela acima.
+## Fluxo principal
+
+**1. Autenticação**
+
+```
+Usuário
+  │
+  ▼
+POST /token
+  │
+  ▼
+Token de acesso
+```
+
+As demais operações protegidas utilizam `Authorization: Bearer <token>`. *(O token é um identificador opaco (UUID) validado no backend — não é um JWT assinado.)*
+
+**2. Envio das transações**
+
+O cliente envia um lote de transações para `POST /api/v1/transacoes`. O backend recebe as transações, extrai as descrições, elimina duplicadas, envia ao serviço Python, recebe as categorias, associa às transações e persiste os dados.
+
+**3. Classificação por Machine Learning**
+
+O serviço Python recebe descrições como `"supermercado"`, `"uber"`, `"farmácia"`, `"aluguel"` e retorna as categorias correspondentes. A classificação textual utiliza representação baseada em FastText e um modelo de classificação (`LogisticRegression`) treinado. Quando a confiança fica abaixo do limite configurado (70%), a aplicação utiliza a categoria `OUTRAS`.
+
+**4. Análise financeira**
+
+Após o armazenamento das transações, o backend consolida os valores por categoria.
+A análise é acionada por `POST /api/v1/analisar`, que envia os dados consolidados
+ao serviço Python para gerar o perfil financeiro e sugestões/alertas.
+
+**5. Resultado**
+
+Após a conclusão da integração dos payloads de perfil e sugestões, os resultados
+serão armazenados pelo backend e disponibilizados por `GET /api/v1/perfil`.
+
+## Capacidades de Machine Learning
+
+| Capacidade                  | Tecnologia                             | Objetivo                                   |
+|-----------------------------|----------------------------------------|--------------------------------------------|
+| Classificação de transações | Python + FastText + LogisticRegression | Categorizar despesas a partir da descrição |
+| Perfil financeiro           | Python + K-Means                       | Identificar o perfil financeiro            |
+| Sugestões/alertas           | Python + K-Means + heurística          | Identificar categorias que merecem atenção |
+
+## Componentes do projeto
+
+```
+G9-BR-Team-14-FinanceAI/
+│
+├── backend/
+│   └── API principal Java/Spring Boot
+│
+├── servico-dados/
+│   └── Serviço Python/FastAPI de Machine Learning
+│
+├── ciencia-dados/
+│   ├── notebooks de treinamento
+│   ├── geradores de dados
+│   └── seeds
+│
+├── frontend/
+│   └── Estrutura reservada para o frontend (ainda não implementado)
+│
+└── data/
+    └── Dados locais de desenvolvimento
+```
+
+## Tecnologias
+
+**Backend**
+Java 25 · Spring Boot 4.1 · Spring Web MVC · Spring Data JPA · Spring Security · Spring Validation · Spring RestClient · Token de acesso opaco · Argon2 · OpenAPI/Swagger · H2 · PostgreSQL
+
+**Machine Learning**
+Python · FastAPI · Scikit-Learn · Pandas · NumPy · Joblib · FastText · K-Means
+
+**Cloud**
+Oracle Cloud Infrastructure · OCI Object Storage · interface compatível com S3 via boto3
+
+**Desenvolvimento**
+Maven · Maven Wrapper · Jupyter Notebook · Git · GitHub
+
+## Banco de dados
+
+**Desenvolvimento:** H2, banco local em arquivo (`./data/financeai`).
+
+**Produção:** PostgreSQL, conexão configurada por variáveis de ambiente.
+
+## Segurança
+
+**Cliente → Backend:** token de acesso opaco via Bearer.
+
+**Backend → Serviço Python:** API Key.
+
+As credenciais são fornecidas por variáveis de ambiente e não devem ser versionadas.
+
+## APIs
+
+**Backend Java**
+
+| Método | Endpoint                   | Função                         |
+|--------|----------------------------|--------------------------------|
+| POST   | `/token`                   | Geração de token de acesso     |
+| POST   | `/token/blacklist`         | Revogação de token             |
+| GET    | `/usuario`                 | Usuário autenticado            |
+| POST   | `/api/v1/transacoes`       | Envio de transações            |
+| POST   | `/api/v1/analisar`         | Execução da análise            |
+| GET    | `/api/v1/perfil`           | Consulta do perfil             |
+
+**Serviço Python**
+
+| Método | Endpoint                   | Função                         |
+|--------|----------------------------|--------------------------------|
+| GET    | `/health`                  | Health check                   |
+| POST   | `/predict/transacoes`      | Classificação de uma transação |
+| POST   | `/predict/lote_transacoes` | Classificação em lote          |
+| POST   | `/predict/perfil`          | Classificação do perfil        |
+| POST   | `/predict/sugestoes`       | Geração de sugestões/alertas   |
+
+## Documentação das APIs
+
+**Backend** (com o backend em execução):
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI: `http://localhost:8080/v3/api-docs`
+
+**Serviço Python** (com o serviço em execução):
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## Execução local
+
+**Backend**
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+Utiliza, por padrão, o profile `dev` e o banco H2 local.
+
+**Serviço Python**
+```bash
+cd servico-dados
+python -m venv venv
+source venv/bin/activate
+pip install -r requiriments.txt
+uvicorn main:app --reload --port 8000
+```
+O serviço Python necessita das configurações de acesso aos artefatos de Machine Learning armazenados no OCI. 
+Ver [nota sobre dependências ausentes](./servico-dados/readme.md#instalação).
+
+## Ciência de Dados
+
+O diretório `ciencia-dados/` contém os materiais utilizados no desenvolvimento dos modelos:
+
+- `treino_categoria_regressao_linear.ipynb`
+- `treino_perfil_usuario_kmeans.ipynb`
+- `treino_sugestoes_kmeans_com_euristica.ipynb`
+
+Também estão presentes scripts para geração de dados e seeds.
+
+## Organização do desenvolvimento
+
+```
+                   FinanceAI
+                        │
+       ┌────────────────┼────────────────┐
+       │                │                │
+       ▼                ▼                ▼
+   Backend Java     Serviço Python    Ciência de Dados
+       │                │                │
+       │                │                │
+       └─────► ML ◄─────┘                │
+                        │                │
+                        ▼                │
+                       OCI ◄─────────────┘
+```
+
+Essa separação permite que o backend concentre as regras de negócio, o Machine Learning seja desenvolvido e executado independentemente, os modelos sejam armazenados separadamente, e os artefatos possam ser atualizados sem incorporar os arquivos diretamente ao backend.
+
+## Documentação dos componentes
+
+- [Backend Java](./backend/README.md)
+- [Serviço Python / Machine Learning](./servico-dados/readme.md)
+- Ciência de Dados — notebooks em `ciencia-dados/`
+
+## Links do projeto
+
+- Repositório: [GitHub - G9-BR-Team-14-FinanceAI](https://github.com/No-Country-simulation/G9-BR-Team-14-FinanceAI)
+- Organização/Simulação: [No Country](https://talent.nocountry.tech/dashboard)
+- Gestão do projeto: [Trello - FinanceAI](https://trello.com/b/koyFysru/financeai-v2)
+- Modelagem do banco: [MER - Autenticação e Autorização](https://dbdiagram.io/d/6a517a094ac62e474c7ded43)
+- Guia do Hackathon: [Guia do Hackathon ONE G9](https://grupoalura.notion.site/Guia-do-Hackathon-ONE-G9-37d379bdd09b8059916af20865a502a6)
+
+## Status do projeto
+
+O repositório contém atualmente:
+
+- backend Java/Spring Boot;
+- autenticação por token de acesso opaco;
+- persistência com H2/PostgreSQL;
+- API REST documentada com OpenAPI;
+- integração parcial com serviço Python (classificação de transações funcional;
+- serviço Python/FastAPI;
+- modelos de classificação e clustering;
+- integração com OCI Object Storage;
+- notebooks e scripts de Ciência de Dados;
+- testes automatizados no backend.
+
+O frontend está atualmente representado no repositório apenas pela estrutura reservada para o componente (pasta vazia).
+
+## Equipe
+
+G9 BR Team 14 - FinanceAI
+
+Projeto desenvolvido no contexto do Hackathon ONE / No Country G9.
