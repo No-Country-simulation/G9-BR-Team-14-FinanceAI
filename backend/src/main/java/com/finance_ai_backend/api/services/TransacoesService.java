@@ -78,10 +78,7 @@ public class TransacoesService {
             RetornoClassificacaoDTO::descricao,
             c -> {
                 String categoria = c.categoria();
-                if (categoria == null) return "OUTRAS";
-                categoria = categoria.toUpperCase();
-                // normalize known pluralization differences coming from the Python service
-                if (categoria.equals("OUTROS")) return "OUTRAS";
+                if (categoria.equals("OUTRAS")) return "DIVIDAS";
                 return categoria;
             },
             (categoriaAntiga, categoriaNova) -> categoriaNova
@@ -159,8 +156,8 @@ public class TransacoesService {
             + analiseFinanceiraDTO.getGastoOutras().doubleValue()
         );
 
-        double porcentagemPoupanca = renda != 0.0 ? analiseFinanceiraDTO.getValorInvestido().doubleValue() / renda : 0.0;
-        double porcentagemGastos = renda != 0.0 ? totalGastos / renda : 0.0;
+        double porcentagemPoupanca = renda != 0.0 ? (analiseFinanceiraDTO.getValorInvestido().doubleValue() / renda) * 100 : 0.0;
+        double porcentagemGastos = renda != 0.0 ? (totalGastos / renda) * 100 : 0.0;
 
         Map<String, Object> perfilRequest = Map.of(
             "porcentagem_gastos", porcentagemGastos,
@@ -198,8 +195,6 @@ public class TransacoesService {
         .body(sugestoesRequest)
         .retrieve()
         .body(SugestoesRetornoDTO.class);
-
-        System.out.println(sugestoes.sugestoesAtivas());
 
         perfilUsuarioRepositorio.save(
             PerfilUsuario.builder()

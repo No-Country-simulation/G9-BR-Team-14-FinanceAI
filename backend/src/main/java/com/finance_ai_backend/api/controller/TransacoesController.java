@@ -64,23 +64,6 @@ public class TransacoesController {
     }
 
     @Operation(
-            summary = "Classifica uma transação (consulta sem salvar)",
-            description = "Classifica a categoria de uma única transação sem persistir"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Classificação retornada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Transação inválida"),
-            @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    })
-    @PostMapping("transacao")
-    public ResponseEntity<Void> gerarTransacao(
-        @Valid @RequestBody TransacaoInputDTO transacaoInputDTO
-    ) {
-        transacoesService.salvarTransacao(transacaoInputDTO.getDescricao());
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(
             summary = "Executa a análise financeira do usuário",
             description = "Processa as transações salvas do usuário autenticado e gera seu perfil financeiro com base em modelo preditivo"
     )
